@@ -1,3 +1,4 @@
+<?php
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -6,12 +7,10 @@ return new class extends Migration {
     public function up() {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('nama', 255);
-            $table->string('alamat', 255);
-            $table->string('no_hp', 50);
-            $table->string('email', 50)->unique();
-            $table->string('role', 50);
+            $table->string('name');
+            $table->string('email')->unique();
             $table->string('password');
+            $table->enum('role', ['pasien', 'dokter']);
             $table->timestamps();
         });
     }
