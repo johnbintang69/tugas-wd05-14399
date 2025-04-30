@@ -29,7 +29,7 @@
             padding: 10px 0;
             background: rgba(255, 255, 255, 0.9);
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 40px;
+            margin-bottom: 10px;
         }
         
         .header h1 {
@@ -107,26 +107,56 @@
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <div class="header">
-        <h1>Selamat Datang di<br>Poliklinik Sehat</h1>
-        <p>Pelayanan Kesehatan Terbaik untuk Anda</p>
-    </div>
-
-    <!-- Authentication Card -->
-    <div class="auth-container">
-        <div class="auth-card">
-            @if (Route::has('login'))
-                @auth
-                    <a href="{{ url('/home') }}" class="btn btn-primary">Dashboard</a>
-                @else
-                    <a href="{{ route('login') }}" class="btn btn-primary">Login</a>
-                    <a href="{{ route('register') }}" class="btn btn-outline-primary">Register</a>
-                @endauth
-            @endif
+    <!-- Hero Section -->
+    <section class="hero-section d-flex align-items-center justify-content-center flex-column flex-md-row">
+        <div class="hero-text text-center text-md-start">
+            <h1 class="display-4 fw-bold mb-3" style="color: var(--primary-color)">Selamat Datang di<br>Poliklinik Sehat</h1>
+            <p class="lead mb-4" style="color: var(--dark-color)">Pelayanan Kesehatan Terbaik untuk Anda.<br>Kesehatan Anda adalah prioritas kami.</p>
+            <div class="d-flex flex-column flex-md-row gap-3 justify-content-center justify-content-md-start">
+                @if (Route::has('login'))
+                    @auth
+                        <a href="{{ url('/home') }}" class="btn btn-primary px-5">Dashboard</a>
+                    @else
+                        <a href="{{ route('login') }}" class="btn btn-primary px-5">Login</a>
+                        <a href="{{ route('register') }}" class="btn btn-outline-primary px-5">Register</a>
+                    @endauth
+                @endif
+            </div>
         </div>
-    </div>
+    </section>
+    
 
+    <style>
+        .hero-section {
+            min-height: 70vh;
+            width: 100%;
+            padding-top: 120px;
+            padding-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            background: none;
+        }
+        .hero-text {
+            max-width: 500px;
+            margin-bottom: 30px;
+        }
+        .hero-illustration img {
+            border-radius: 24px;
+            box-shadow: 0 10px 32px rgba(45, 140, 240, 0.09);
+        }
+        @media (max-width: 767px) {
+            .hero-section {
+                flex-direction: column;
+                padding-top: 100px;
+                gap: 20px;
+            }
+            .hero-illustration {
+                margin: 0 auto;
+            }
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

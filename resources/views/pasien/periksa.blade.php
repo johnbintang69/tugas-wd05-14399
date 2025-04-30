@@ -61,7 +61,7 @@
               <div class="form-group">
                 <label for="tgl_periksa">Tanggal & Waktu Periksa</label>
                 <div class="input-group date" id="tgl_periksa_picker" data-target-input="nearest">
-                  <input type="text" class="form-control datetimepicker-input @error('tgl_periksa') is-invalid @enderror" id="tgl_periksa" name="tgl_periksa" data-target="#tgl_periksa_picker" required>
+                  <input type="text" class="form-control datetimepicker-input @error('tgl_periksa') is-invalid @enderror" id="tgl_periksa" name="tgl_periksa" data-target="#tgl_periksa_picker" required readonly style="background-color: #fff; cursor: pointer;">
                   <div class="input-group-append" data-target="#tgl_periksa_picker" data-toggle="datetimepicker">
                     <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                   </div>
@@ -195,27 +195,39 @@
 
 @section('styles')
 <!-- Tempusdominus Bootstrap 4 -->
-<link rel="stylesheet" href="{{ asset('plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tempusdominus-bootstrap-4@5.39.0/build/css/tempusdominus-bootstrap-4.min.css" />
 @endsection
 
 @section('scripts')
-<!-- InputMask -->
-<script src="{{ asset('plugins/moment/moment.min.js') }}"></script>
-<script src="{{ asset('plugins/inputmask/jquery.inputmask.min.js') }}"></script>
-<!-- Tempusdominus Bootstrap 4 -->
-<script src="{{ asset('plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js') }}"></script>
+<!-- Moment.js and Tempus Dominus Bootstrap 4 via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tempusdominus-bootstrap-4@5.39.0/build/js/tempusdominus-bootstrap-4.min.js"></script>
 <script>
   $(function () {
-    //Date and time picker
     $('#tgl_periksa_picker').datetimepicker({
-      icons: { time: 'far fa-clock' },
-      format: 'YYYY-MM-DD HH:mm:ss',
+      format: 'YYYY-MM-DD HH:mm',
+      icons: {
+        time: 'far fa-clock',
+        date: 'far fa-calendar-alt',
+        up: 'fas fa-arrow-up',
+        down: 'fas fa-arrow-down',
+        previous: 'fas fa-chevron-left',
+        next: 'fas fa-chevron-right',
+        today: 'fas fa-calendar-check',
+        clear: 'far fa-trash-alt',
+        close: 'far fa-times-circle'
+      },
       minDate: moment().startOf('day'),
       stepping: 30,
-      enabledHours: [8, 9, 10, 11, 12, 13, 14, 15, 16]
+      enabledHours: [8, 9, 10, 11, 12, 13, 14, 15, 16],
+      locale: 'id',
+      useCurrent: false,
+      allowInputToggle: true
     });
-    
-    // Disable weekends
+    // Open picker on input or icon click
+    $('#tgl_periksa, #tgl_periksa_picker .input-group-append').on('click', function() {
+      $('#tgl_periksa_picker').datetimepicker('show');
+    });
     $('#tgl_periksa_picker').on('dp.change', function(e) {
       var day = moment(e.date).day();
       if (day === 6 || day === 0) {
