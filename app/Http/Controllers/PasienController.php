@@ -2,60 +2,115 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pasien;
+use App\Models\Obat;
+use App\Models\Periksa;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class PasienController extends Controller
 {
-    public function index()
+    public function __construct()
     {
-        $pasiens = Pasien::all();
-        return view('pasien.index', compact('pasiens'));
+        $this->middleware('auth');
+        $this->middleware('role:pasien');
     }
 
-    public function create()
+    /**
+     * Menampilkan dashboard pasien
+     */
+    public function dashboard()
     {
-        return view('pasien.create');
+        $user = Auth::user();
+        
+        // Mengambil data untuk statistik
+        $riwayat_count = Periksa::where('id_pasien', $user->id)->count();
+        $dokter_count = User::where('role', 'dokter')->count();
+        $obat_count = Obat::count();
+        
+        // Mengambil riwayat periksa terbaru
+        $riwayats = Periksa::where('id_pasien', $user->id)
+            ->where('catatan_dokter', '!=', null)
+            ->orderBy('tgl_periksa', 'desc')
+            ->limit(5)
+            ->get();
+        
+        // Mengambil daftar dokter
+        $dokters = User::where('role', 'dokter')->get();
+        
+        return view('pasien.dashboard', compact('riwayat_count', 'dokter_count', 'obat_count', 'riwayats', 'dokters'));
     }
 
-    public function store(Request $request)
+    /**
+     * Menampilkan form pendaftaran periksa
+     */
+    public function periksa()
+    {
+        $dokters = User::where('role', 'dokter')->get();
+        
+        // Mengambil jadwal periksa yang akan datang (pending)
+        $upcoming_periksa = Periksa::where('id_pasien', Auth::id())
+            ->where('status', 'pending')
+            ->where('tgl_periksa', '>=', Carbon::now())
+            ->orderBy('tgl_periksa', 'asc')
+            ->get();
+        
+        return view('pasien.periksa', compact('dokters', 'upcoming_periksa'));
+    }
+
+    /**
+     * Menyimpan pendaftaran periksa baru
+     */
+    public function periksaStore(Request $request)
     {
         $request->validate([
-            'nama_pasien' => 'required',
-            'alamat' => 'required',
-            'no_telp' => 'required',
+            'id_dokter' => 'required|exists:users,id',
+            'tgl_periksa' => 'required|date|after_or_equal:today',
+            'keluhan' => 'required|string',
         ]);
 
-        Pasien::create($request->all());
+        $periksa = new Periksa();
+        $periksa->id_pasien = Auth::id();
+        $periksa->id_dokter = $request->id_dokter;
+        $periksa->tgl_periksa = $request->tgl_periksa;
+        $periksa->keluhan = $request->keluhan;
+        $periksa->catatan_dokter = null;
+        $periksa->status = 'pending';
+        $periksa->biaya_periksa = 0;
+        $periksa->save();
 
-        return redirect()->route('pasien.index')->with('success', 'Pasien berhasil ditambahkan');
+        return redirect()->route('pasien.periksa')
+            ->with('success', 'Pendaftaran periksa berhasil disimpan!');
     }
 
-    public function edit($id)
+    /**
+     * Membatalkan pendaftaran periksa
+     */
+    public function periksaDestroy($id)
     {
-        $pasien = Pasien::findOrFail($id);
-        return view('pasien.edit', compact('pasien'));
+        $periksa = Periksa::where('id', $id)
+            ->where('id_pasien', Auth::id())
+            ->where('status', 'pending')
+            ->firstOrFail();
+        
+        $periksa->delete();
+        
+        return redirect()->route('pasien.periksa')
+            ->with('success', 'Pendaftaran periksa berhasil dibatalkan!');
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Menampilkan riwayat periksa
+     */
+    public function riwayat()
     {
-        $request->validate([
-            'nama_pasien' => 'required',
-            'alamat' => 'required',
-            'no_telp' => 'required',
-        ]);
-
-        $pasien = Pasien::findOrFail($id);
-        $pasien->update($request->all());
-
-        return redirect()->route('pasien.index')->with('success', 'Pasien berhasil diupdate');
-    }
-
-    public function destroy($id)
-    {
-        $pasien = Pasien::findOrFail($id);
-        $pasien->delete();
-
-        return redirect()->route('pasien.index')->with('success', 'Pasien berhasil dihapus');
+        $riwayats = Periksa::where('id_pasien', Auth::id())
+            ->where('catatan_dokter', '!=', null)
+            ->where('status', 'done')
+            ->orderBy('tgl_periksa', 'desc')
+            ->get();
+        
+        return view('pasien.riwayat', compact('riwayats'));
     }
 }

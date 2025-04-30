@@ -24,12 +24,34 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'nama' => fake()->name(),
+            'alamat' => fake()->address(),
+            'no_hp' => fake()->phoneNumber(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'role' => fake()->randomElement(['dokter', 'pasien']),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /**
+     * Set the user role as doctor.
+     */
+    public function dokter(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'dokter',
+        ]);
+    }
+
+    /**
+     * Set the user role as patient.
+     */
+    public function pasien(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'pasien',
+        ]);
     }
 
     /**
