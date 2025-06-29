@@ -1,19 +1,39 @@
-# 🏥 Patient Management System (Kasap Mata)
+# 🏥 Sistem Manajemen Klinik
 
-**Nama:** Fatwa Reksa Aji Pradana  
-**NIM:** A11202214393
+### Tentang Saya
+- **Nama Lengkap**: Bintang Ilham Kurniawan
+- **NIM**: A11.2022.14399
+- **Kelas**: WD05
 
-## 1. Overview
-Halo! 👋 Saya membuat aplikasi manajemen klinik sederhana ini menggunakan kombinasi Laravel 12, MySQL, dan AdminLTE. Fitur-fiturnya meliputi registrasi pasien, permintaan pemeriksaan, antrian dokter, pencatatan pemeriksaan, manajemen obat, dan riwayat pasien. Semua dibuat dengan pendekatan MVC agar rapi dan mudah dikembangkan.
+## 📋 Gambaran Umum
+Aplikasi manajemen klinik berbasis web ini dikembangkan dengan teknologi modern untuk memudahkan pengelolaan data pasien, dokter, dan obat-obatan. Dibangun menggunakan Laravel 12 sebagai backend framework dengan dukungan MySQL untuk database, serta AdminLTE untuk tampilan antarmuka yang responsif dan user-friendly.
 
-## 2. Fitur Utama
-- **Autentikasi**: login, register untuk pasien dan dokter.
-- **Registrasi Pasien**: pasien daftar akun.
-- **Permintaan Pemeriksaan**: pasien isi keluhan, status `pending`.
-- **Antrian Dokter**: dokter lihat daftar periksa `pending`.
-- **Update Pemeriksaan**: dokter isi catatan, ubah status ke `done`.
-- **Manajemen Obat**: CRUD obat dengan DataTables (tambah, edit, hapus via AJAX & modal).
-- **Riwayat Pasien**: pasien lihat riwayat periksa dengan catatan dokter dan resep obat.
+## ✨ Fitur Unggulan
+- **Sistem Autentikasi**
+  - Login multi-role (Admin, Dokter, Pasien)
+  - Registrasi akun pasien
+  - Manajemen sesi pengguna
+
+- **Modul Pasien**
+  - Pendaftaran akun pasien baru
+  - Pengisian form permintaan pemeriksaan
+  - Melihat riwayat pemeriksaan
+
+- **Modul Dokter**
+  - Manajemen antrian pasien
+  - Pencatatan hasil pemeriksaan
+  - Resep dan rekomendasi obat
+
+- **Manajemen Obat**
+  - Input data obat baru
+  - Update stok obat
+  - Pencarian dan filter data obat
+  - Penghapusan data obat
+
+- **Laporan & Riwayat**
+  - Riwayat pemeriksaan pasien
+  - Catatan medis lengkap
+  - Resep dan pengobatan
 
 ## 3. Struktur Folder (Non-default Laravel)
 ```
