@@ -35,7 +35,7 @@
 
   <!-- Preloader -->
   <div class="preloader flex-column justify-content-center align-items-center">
-    <img class="animation__shake" src="{{ asset('dist/img/AdminLTELogo.png') }}" alt="Logo" height="60" width="60">
+    <img class="animation__shake" src="{{ asset('dist/img/logo/grass.png') }}" alt="Logo" height="60" width="60">
   </div>
 
   <!-- Navbar -->
@@ -87,7 +87,7 @@
       <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
-          <img src="{{ asset('dist/img/user2-160x160.jpg') }}" class="img-circle elevation-2" alt="User Image">
+          <img src="{{ asset('dist/img/avatar5.png') }}" class="img-circle elevation-2" alt="Pasien Image">
         </div>
         <div class="info">
           <a href="#" class="d-block">{{ Auth::user()->nama }}</a>
@@ -129,7 +129,7 @@
   <!-- /.content-wrapper -->
 
   <footer class="main-footer">
-    <strong>Copyright &copy; 2025 <a href="#">Poliklinik</a>.</strong>
+    <strong>Copyright &copy; 2025 <a href="https://github.com/Hessaajipradana/tugas-wd05-14393">Poliklinik</a>.</strong>
     All rights reserved.
     <div class="float-right d-none d-sm-inline-block">
       <b>Version</b> 1.0.0

@@ -1,82 +1,79 @@
 <?php
-
+// app/Models/User.php (Updated)
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
-        'nama',
-        'alamat',
-        'no_hp',
         'email',
+        'password', 
         'role',
-        'password',
+        'entity_id'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
 
-    /**
-     * Check if the user is a doctor.
-     */
-    public function isDokter(): bool
+    // Relasi ke dokter jika role = dokter
+    public function dokter()
+    {
+        return $this->belongsTo(Dokter::class, 'entity_id');
+    }
+
+    // Relasi ke pasien jika role = pasien  
+    public function pasien()
+    {
+        return $this->belongsTo(Pasien::class, 'entity_id');
+    }
+
+    // Helper untuk mendapatkan nama
+    public function getNamaAttribute()
+    {
+        if ($this->role === 'dokter' && $this->dokter) {
+            return $this->dokter->nama;
+        } elseif ($this->role === 'pasien' && $this->pasien) {
+            return $this->pasien->nama;
+        }
+        return 'Unknown';
+    }
+
+    // Helper untuk mendapatkan entitas utama (dokter/pasien)
+    public function getEntityAttribute()
+    {
+        if ($this->role === 'dokter') {
+            return $this->dokter;
+        } elseif ($this->role === 'pasien') {
+            return $this->pasien;
+        }
+        return null;
+    }
+
+    public function isDokter()
     {
         return $this->role === 'dokter';
     }
 
-    /**
-     * Check if the user is a patient.
-     */
-    public function isPasien(): bool
+    public function isPasien()
     {
         return $this->role === 'pasien';
     }
 
-    /**
-     * Get the examinations where this user is the patient.
-     */
-    public function periksaSebagaiPasien(): HasMany
+    public function isAdmin()
     {
-        return $this->hasMany(Periksa::class, 'id_pasien');
-    }
-
-    /**
-     * Get the examinations where this user is the doctor.
-     */
-    public function periksaSebagaiDokter(): HasMany
-    {
-        return $this->hasMany(Periksa::class, 'id_dokter');
+        return $this->role === 'admin';
     }
 }

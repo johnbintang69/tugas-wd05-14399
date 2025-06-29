@@ -50,7 +50,7 @@
       <div class="col-md-5">
         <!-- Form Tambah/Edit Obat -->
         <div class="card card-primary">
-          <div class="card-header">
+          <div class="card-header bg-primary" id="form-header">
             <h3 class="card-title" id="form-title">Tambah Obat Baru</h3>
           </div>
           <!-- /.card-header -->
@@ -91,7 +91,7 @@
             <!-- /.card-body -->
 
             <div class="card-footer">
-              <button type="submit" class="btn btn-primary">Simpan</button>
+              <button type="submit" class="btn btn-primary" id="btnSimpan">Simpan</button>
               <button type="button" id="btnCancel" class="btn btn-default" style="display: none;">Batal</button>
             </div>
           </form>
@@ -101,89 +101,12 @@
       
       <div class="col-md-7">
         <!-- Daftar Obat -->
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Daftar Obat</h3>
-          </div>
-          <!-- /.card-header -->
-          <div class="card-body table-responsive">
-            <table class="table table-hover text-nowrap" id="obatTable">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nama Obat</th>
-                  <th>Kemasan</th>
-                  <th>Harga</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                @if(isset($obats) && count($obats) > 0)
-                  @foreach($obats as $obat)
-                  <tr>
-                    <td>{{ $obat->id }}</td>
-                    <td>{{ $obat->nama_obat }}</td>
-                    <td>{{ $obat->kemasan }}</td>
-                    <td>Rp {{ number_format($obat->harga, 0, ',', '.') }}</td>
-                    <td>
-                      <button class="btn btn-sm btn-info edit-obat" data-id="{{ $obat->id }}" data-nama="{{ $obat->nama_obat }}" data-kemasan="{{ $obat->kemasan }}" data-harga="{{ $obat->harga }}">
-                        <i class="fas fa-edit"></i> Edit
-                      </button>
-                      <button class="btn btn-sm btn-danger btn-delete" data-id="{{ $obat->id }}" data-nama="{{ $obat->nama_obat }}">
-                        <i class="fas fa-trash"></i> Hapus
-                      </button>
-                    </td>
-                  </tr>
-                  @endforeach
-                @else
-                  <!-- Dummy data jika belum ada data -->
-                  <tr>
-                    <td>1</td>
-                    <td>Paracetamol</td>
-                    <td>Tablet 500mg</td>
-                    <td>Rp 10.000</td>
-                    <td>
-                      <button class="btn btn-sm btn-info edit-obat" data-id="1" data-nama="Paracetamol" data-kemasan="Tablet 500mg" data-harga="10000">
-                        <i class="fas fa-edit"></i> Edit
-                      </button>
-                      <button class="btn btn-sm btn-danger btn-delete" data-id="1" data-nama="Paracetamol">
-                        <i class="fas fa-trash"></i> Hapus
-                      </button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>2</td>
-                    <td>Amoxicillin</td>
-                    <td>Kapsul 500mg</td>
-                    <td>Rp 25.000</td>
-                    <td>
-                      <button class="btn btn-sm btn-info edit-obat" data-id="2" data-nama="Amoxicillin" data-kemasan="Kapsul 500mg" data-harga="25000">
-                        <i class="fas fa-edit"></i> Edit
-                      </button>
-                      <button class="btn btn-sm btn-danger btn-delete" data-id="2" data-nama="Amoxicillin">
-                        <i class="fas fa-trash"></i> Hapus
-                      </button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>3</td>
-                    <td>Ibuprofen</td>
-                    <td>Tablet 400mg</td>
-                    <td>Rp 15.000</td>
-                    <td>
-                      <button class="btn btn-sm btn-info edit-obat" data-id="3" data-nama="Ibuprofen" data-kemasan="Tablet 400mg" data-harga="15000">
-                        <i class="fas fa-edit"></i> Edit
-                      </button>
-                      <button class="btn btn-sm btn-danger btn-delete" data-id="3" data-nama="Ibuprofen">
-                        <i class="fas fa-trash"></i> Hapus
-                      </button>
-                    </td>
-                  </tr>
-                @endif
-              </tbody>
-            </table>
-          </div>
-        </div>
+        @include('tables.table', [
+          'title' => 'Daftar Obat',
+          'tableId' => 'obatTable',
+          'thead' => view('tables.partial.dokter.obat-thead'),
+          'tbody' => view('tables.partial.dokter.obat-tbody', ['obats' => $obats])
+        ])
         <!-- /.card -->
       </div>
     </div>
@@ -319,7 +242,7 @@
 
 @section('scripts')
 <script>
-  $(function () {
+$(function () {
     // Auto-close alerts after 5 seconds
     $("#success-alert, #error-alert").fadeTo(5000, 500).slideUp(500);
     // DataTable inisialisasi
@@ -329,32 +252,39 @@
       autoWidth: false,
       buttons: ['copy','csv','excel','pdf','print','colvis']
     }).buttons().container().appendTo('#obatTable_wrapper .col-md-6:eq(0)');
-  });
 
-  $('.edit-obat').on('click', function () {
-  $('#form-title').text('Edit Obat');
-  $('#obat_id').val($(this).data('id'));
-  $('#nama_obat').val($(this).data('nama'));
-  $('#kemasan').val($(this).data('kemasan'));
-  $('#harga').val($(this).data('harga'));
-  $('#method').val('PUT');
-  $('#obatForm').attr('action', `/dokter/obat/${$(this).data('id')}`);
-  $('#btnCancel').show();
+    // Handler edit obat (event delegation)
+    $(document).on('click', '.btn-edit', function () {
+        $('#obat_id').val($(this).data('id'));
+        $('#nama_obat').val($(this).data('nama'));
+        $('#kemasan').val($(this).data('kemasan'));
+        $('#harga').val($(this).data('harga'));
+        $('#form-title').text('Edit Obat: ' + $(this).data('nama'));
+        
+        $('#form-header').removeClass('bg-primary').addClass('bg-warning');
+        $('#btnSimpan').removeClass('btn-primary').addClass('btn-warning');
+        $('#method').val('PUT');
+        $('#obatForm').attr('action', '/dokter/obat/' + $(this).data('id'));
+        $('#btnCancel').show();
+    });
+
+    // Handler hapus obat (event delegation)
+    $(document).on('click', '.btn-delete', function () {
+        $('#delete-obat-nama').text($(this).data('nama'));
+        $('#deleteForm').attr('action', '/dokter/obat/' + $(this).data('id'));
+        $('#deleteModal').modal('show');
+    });
+
+    // Cancel edit
+    $('#btnCancel').on('click', function () {
+        $('#obatForm')[0].reset();
+        $('#form-title').text('Tambah Obat Baru');
+        $('#form-header').removeClass('bg-warning').addClass('bg-primary');
+        $('#btnSimpan').removeClass('btn-warning').addClass('btn-primary');
+        $('#method').val('POST');
+        $('#obatForm').attr('action', '{{ route('dokter.obat.store') }}');
+        $('#btnCancel').hide();
+    });
 });
-
-$('#btnCancel').on('click', function () {
-  $('#form-title').text('Tambah Obat Baru');
-  $('#obatForm')[0].reset();
-  $('#method').val('POST');
-  $('#obatForm').attr('action', `{{ route('dokter.obat.store') }}`);
-  $('#btnCancel').hide();
-});
-
-$('.btn-delete').on('click', function () {
-  $('#delete-obat-nama').text($(this).data('nama'));
-  $('#deleteForm').attr('action', `/dokter/obat/${$(this).data('id')}`);
-  $('#deleteModal').modal('show');
-});
-
 </script>
 @endsection

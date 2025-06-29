@@ -1,13 +1,15 @@
 <?php
-
+// app/Http/Controllers/Auth/AuthController.php (UPDATED)
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Pasien;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -29,10 +31,17 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             // Redirect berdasarkan role
-            if (Auth::user()->isDokter()) {
-                return redirect()->route('dokter.dashboard');
+            $user = Auth::user();
+            
+            if ($user->isAdmin()) {
+                return redirect()->route('admin.dashboard')
+                    ->with('success', 'Selamat datang, Administrator!');
+            } elseif ($user->isDokter()) {
+                return redirect()->route('dokter.dashboard')
+                    ->with('success', 'Selamat datang, Dr. ' . $user->nama . '!');
             } else {
-                return redirect()->route('pasien.dashboard');
+                return redirect()->route('pasien.dashboard')
+                    ->with('success', 'Selamat datang, ' . $user->nama . '!');
             }
         }
 
@@ -49,12 +58,12 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'nama' => 'required|string|max:255',
-            'email' => 'required|string|email|max:50|unique:users',
+            'nama' => 'required|string|max:150',
             'alamat' => 'required|string|max:255',
-            'no_hp' => 'required|string|max:50',
+            'no_ktp' => 'required|string|size:16|unique:pasien,no_ktp',
+            'no_hp' => 'required|string|max:15',
+            'email' => 'required|string|email|max:50|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:pasien',
             'terms' => 'required',
         ]);
 
@@ -64,28 +73,52 @@ class AuthController extends Controller
                 ->withInput();
         }
 
-        $user = User::create([
-            'nama' => $request->nama,
-            'email' => $request->email,
-            'alamat' => $request->alamat,
-            'no_hp' => $request->no_hp,
-            'role' => $request->role,
-            'password' => Hash::make($request->password),
-        ]);
+        DB::beginTransaction();
+        
+        try {
+            // 1. Buat pasien baru dengan auto-generate No RM
+            $pasien = Pasien::create([
+                'nama' => $request->nama,
+                'alamat' => $request->alamat,
+                'no_ktp' => $request->no_ktp,
+                'no_hp' => $request->no_hp,
+            ]);
 
-        Auth::login($user);
+            // 2. Buat user account untuk pasien
+            $user = User::create([
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'pasien',
+                'entity_id' => $pasien->id,
+            ]);
 
-        return redirect()->route('pasien.dashboard');
+            DB::commit();
+
+            // Auto login setelah registrasi
+            Auth::login($user);
+
+            return redirect()->route('pasien.dashboard')
+                ->with('success', "Registrasi berhasil! No Rekam Medis Anda: {$pasien->no_rm}");
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return redirect()->route('register')
+                ->with('error', 'Registrasi gagal: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     public function logout(Request $request)
     {
+        $userName = Auth::user()->nama ?? 'User';
+        
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/')->with('success', 'Sampai jumpa, ' . $userName . '!');
     }
 
     public function showForgotPasswordForm()

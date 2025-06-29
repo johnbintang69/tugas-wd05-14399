@@ -1,66 +1,107 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏥 Patient Management System (Kasap Mata)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Nama:** Fatwa Reksa Aji Pradana  
+**NIM:** A11202214393
 
-## About Laravel
+## 1. Overview
+Halo! 👋 Saya membuat aplikasi manajemen klinik sederhana ini menggunakan kombinasi Laravel 12, MySQL, dan AdminLTE. Fitur-fiturnya meliputi registrasi pasien, permintaan pemeriksaan, antrian dokter, pencatatan pemeriksaan, manajemen obat, dan riwayat pasien. Semua dibuat dengan pendekatan MVC agar rapi dan mudah dikembangkan.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 2. Fitur Utama
+- **Autentikasi**: login, register untuk pasien dan dokter.
+- **Registrasi Pasien**: pasien daftar akun.
+- **Permintaan Pemeriksaan**: pasien isi keluhan, status `pending`.
+- **Antrian Dokter**: dokter lihat daftar periksa `pending`.
+- **Update Pemeriksaan**: dokter isi catatan, ubah status ke `done`.
+- **Manajemen Obat**: CRUD obat dengan DataTables (tambah, edit, hapus via AJAX & modal).
+- **Riwayat Pasien**: pasien lihat riwayat periksa dengan catatan dokter dan resep obat.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 3. Struktur Folder (Non-default Laravel)
+```
+app/
+  Http/Controllers/
+    AuthController.php        # Login, register
+    PasienController.php      # CRUD pasien, form periksa, riwayat
+    DokterController.php      # Antrian periksa, update, CRUD obat
+  Models/
+    Pasien.php                # Eloquent model pasien
+    Periksa.php               # Eloquent model periksa (keluhan, catatan_dokter, status)
+    Obat.php                  # Eloquent model obat
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+database/
+  migrations/
+    *_create_pasiens_table.php
+    *_create_periksas_table.php
+    *_create_obats_table.php
+  seeders/                   # (opsional) data awal
 
-## Learning Laravel
+public/
+  adminlte/                  # template AdminLTE (CSS/JS)
+  plugins/datatables/        # DataTables assets
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+resources/views/
+  layouts/dokter.blade.php   # layout utama dokter
+  layouts/pasien.blade.php   # layout utama pasien
+  pasien/
+    register.blade.php       # form registrasi
+    periksa.blade.php        # form permintaan periksa
+    riwayat.blade.php        # tabel riwayat pemeriksaan
+  dokter/
+    dashboard.blade.php      # statistik dashboard dokter
+    periksa.blade.php        # tabel antrian periksa
+    periksa-edit.blade.php   # modal edit pemeriksaan
+    obat.blade.php           # form + tabel obat (DataTables)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+routes/web.php               # route definisi untuk pasien & dokter
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 4. Alur Sistem
+1. **Pasien Register**: POST `/register` → `AuthController@register` → tabel `pasiens`.
+2. **Pasien Login**: POST `/login` → `AuthController@login`.
+3. **Permintaan Pemeriksaan**: POST `/pasien/periksa` → `PasienController@storePeriksa` → `periksas` status `pending`.
+4. **Dokter Antrian**: GET `/dokter/periksa` → `DokterController@periksa` → tampilkan DataTable.
+5. **Update Pemeriksaan**: PUT `/dokter/periksa/{id}` → `DokterController@periksaUpdate` (simpan `catatan_dokter`, status `done`).
+6. **CRUD Obat**: 
+   - GET `/dokter/obat` → form + DataTable.
+   - POST `/dokter/obat` → `DokterController@storeObat`.
+   - PUT `/dokter/obat/{id}` → `DokterController@updateObat`.
+   - DELETE `/dokter/obat/{id}` → `DokterController@destroyObat`.
+7. **Riwayat Pasien**: GET `/pasien/riwayat` → `PasienController@riwayat` → DataTable.
 
-## Laravel Sponsors
+## 5. Dependensi & Teknologi ⚙️
+- **Laravel 12.x** 🚀, **PHP 8.x**, **Composer**
+- **MySQL** 🐬
+- **AdminLTE** 🎨
+- **jQuery**, **DataTables** (responsive, buttons)
+- **AJAX & Modal**: CRUD obat tanpa reload penuh
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 6. Cara Penggunaan 🛠️
+1. `composer install`
+2. `php artisan migrate`
+3. `php artisan serve`
+4. Akses di `http://localhost:8000` 🚦
 
-### Premium Partners
+## 7. Penjelasan Arsitektur MVC 🗂️
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Aplikasi ini saya bangun dengan pola **MVC (Model-View-Controller)**:
+- **Model** 🗃️: Berisi logika dan struktur data, misal model `Pasien`, `Periksa`, dan `Obat` yang berhubungan langsung dengan database MySQL.
+- **View** 👁️: Semua tampilan antarmuka (UI) saya buat dengan Blade, AdminLTE, dan DataTables agar user experience lebih nyaman dan modern.
+- **Controller** 🧑‍💻: Di sinilah saya mengatur alur data dari model ke view, serta menangani request dari user (misal login, CRUD, dll).
 
-## Contributing
+Dengan pola MVC ini, kode jadi lebih terstruktur, mudah dipelihara, dan scalable untuk kebutuhan pengembangan ke depan.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 8. User Stories / Demonstrasi
 
-## Code of Conduct
+### 7.1 Pasien
+- **Register Pasien**: Demonstrasikan pasien melakukan registrasi di `/register`.
+- **Login Pasien**: Demonstrasikan pasien login menggunakan akun terdaftar.
+- **Fitur Periksa**: Demonstrasikan pasien mengisi form periksa (`/pasien/periksa`), memasukkan keluhan, dan submit.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 7.2 Dokter
+- **Login Dokter**: Demonstrasikan dokter login di `/login` dengan role dokter.
+- **Fitur Memeriksa**: Demonstrasikan dokter melihat daftar periksa pending, membuka detail periksa (`/dokter/periksa/{id}/edit`), mengisi `catatan_dokter`, dan submit.
+- **Fitur CRUD Obat**: Demonstrasikan doktor menambah, mengedit, menghapus, dan melihat data obat di `/dokter/obat`.
 
-## Security Vulnerabilities
+### 7.3 Tampilan AdminLTE
+- **Kesesuaian UI**: Demonstrasikan semua halaman menggunakan template AdminLTE (navigation, card, form, tabel) untuk tampilan konsisten.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---

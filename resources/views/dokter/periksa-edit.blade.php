@@ -34,77 +34,89 @@
           </div>
           <!-- /.card-header -->
           <div class="card-body">
-            <div class="row">
-              <div class="col-md-6">
-                <div class="callout callout-info">
-                  <h5>Informasi Pasien</h5>
-                  <dl class="row">
-                    <dt class="col-sm-4">Nama Pasien</dt>
-                    <dd class="col-sm-8">{{ $periksa->pasien->nama }}</dd>
-                    
-                    <dt class="col-sm-4">Email</dt>
-                    <dd class="col-sm-8">{{ $periksa->pasien->email }}</dd>
-                    
-                    <dt class="col-sm-4">No. HP</dt>
-                    <dd class="col-sm-8">{{ $periksa->pasien->no_hp }}</dd>
-                    
-                    <dt class="col-sm-4">Alamat</dt>
-                    <dd class="col-sm-8">{{ $periksa->pasien->alamat }}</dd>
-                    
-                    <dt class="col-sm-4">Tanggal Periksa</dt>
-                    <dd class="col-sm-8">{{ \Carbon\Carbon::parse($periksa->tgl_periksa)->format('d M Y H:i') }}</dd>
-                    
-                    <dt class="col-sm-4">Keluhan</dt>
-                    <dd class="col-sm-8">{{ $periksa->keluhan ?? '-' }}</dd>
-                  </dl>
+            <!-- Info Pasien & Riwayat -->
+            <div class="row g-4 mb-4">
+              <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                  <div class="card-header bg-primary text-white">
+                    <strong>Informasi Pasien</strong>
+                  </div>
+                  <div class="card-body">
+                    <dl class="row mb-0">
+                      <dt class="col-sm-5">Nama Pasien</dt>
+                      <dd class="col-sm-7 mb-1">{{ $daftarPoli->pasien->nama }}</dd>
+                      <dt class="col-sm-5">No. RM</dt>
+                      <dd class="col-sm-7 mb-1">{{ $daftarPoli->pasien->no_rm }}</dd>
+                      <dt class="col-sm-5">No. HP</dt>
+                      <dd class="col-sm-7 mb-1">{{ $daftarPoli->pasien->no_hp }}</dd>
+                      <dt class="col-sm-5">Alamat</dt>
+                      <dd class="col-sm-7 mb-1">{{ $daftarPoli->pasien->alamat }}</dd>
+                      <dt class="col-sm-5">Tanggal Daftar</dt>
+                      <dd class="col-sm-7 mb-1">{{ \Carbon\Carbon::parse($daftarPoli->tanggal_daftar)->format('d M Y') }}</dd>
+                      <dt class="col-sm-5">No. Antrian</dt>
+                      <dd class="col-sm-7 mb-1">
+                        <span class="badge badge-primary">#{{ $daftarPoli->no_antrian }}</span>
+                      </dd>
+                      <dt class="col-sm-5">Keluhan</dt>
+                      <dd class="col-sm-7 mb-1">{{ $daftarPoli->keluhan ?? '-' }}</dd>
+                    </dl>
+                  </div>
                 </div>
               </div>
-              <div class="col-md-6">
-                <!-- Riwayat Pemeriksaan Sebelumnya -->
-                <div class="card card-outline card-warning">
-                  <div class="card-header">
-                    <h3 class="card-title">Riwayat Pemeriksaan Sebelumnya</h3>
+              
+              <div class="col-md-8">
+                <div class="card h-100 shadow-sm">
+                  <div class="card-header bg-warning">
+                    <strong>Riwayat Pemeriksaan Sebelumnya</strong>
                   </div>
                   <div class="card-body p-0">
-                    <table class="table table-striped">
-                      <thead>
-                        <tr>
-                          <th>Tanggal</th>
-                          <th>Diagnosa</th>
-                          <th>Obat</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @php
-                          $riwayats = App\Models\Periksa::where('id_pasien', $periksa->id_pasien)
-                            ->where('id', '!=', $periksa->id)
-                            ->where('biaya_periksa', '>', 0)
-                            ->orderBy('tgl_periksa', 'desc')
-                            ->limit(3)
-                            ->get();
-                        @endphp
-                        
-                        @if(count($riwayats) > 0)
-                          @foreach($riwayats as $riwayat)
+                    <div class="table-responsive">
+                      <table class="table table-sm table-bordered mb-0">
+                        <thead class="bg-light">
                           <tr>
-                            <td>{{ \Carbon\Carbon::parse($riwayat->tgl_periksa)->format('d/m/Y') }}</td>
-                            <td>{{ $riwayat->catatan }}</td>
-                            <td>
-                              <ul class="mb-0 pl-3">
-                                @foreach($riwayat->obat as $obat)
-                                  <li>{{ $obat->nama_obat }}</li>
-                                @endforeach
-                              </ul>
-                            </td>
+                            <th style="width: 110px;">Tanggal</th>
+                            <th>Diagnosa</th>
+                            <th>Obat</th>
                           </tr>
-                          @endforeach
-                        @else
-                          <tr>
-                            <td colspan="3" class="text-center">Tidak ada riwayat pemeriksaan sebelumnya</td>
-                          </tr>
-                        @endif
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          @php
+                              $riwayats = App\Models\Periksa::whereHas('daftarPoli', function($q) use ($daftarPoli) {
+                                  $q->where('id_pasien', $daftarPoli->id_pasien);
+                              })
+                              ->where('id', '!=', $periksa->id ?? 0)
+                              ->whereNotNull('catatan')
+                              ->with(['daftarPoli.jadwal.dokter', 'obat'])
+                              ->orderBy('tgl_periksa', 'desc')
+                              ->limit(3)
+                              ->get();
+                          @endphp
+                          @if(count($riwayats) > 0)
+                            @foreach($riwayats as $riwayat)
+                              <tr>
+                                <td>{{ \Carbon\Carbon::parse($riwayat->tgl_periksa)->format('d/m/Y') }}</td>
+                                <td>{{ $riwayat->catatan ?? '-' }}</td>
+                                <td>
+                                  @if(count($riwayat->obat) > 0)
+                                    <ul class="mb-0 ps-3">
+                                      @foreach($riwayat->obat as $obat)
+                                        <li>{{ $obat->nama_obat }}</li>
+                                      @endforeach
+                                    </ul>
+                                  @else
+                                    <span class="text-muted">-</span>
+                                  @endif
+                                </td>
+                              </tr>
+                            @endforeach
+                          @else
+                            <tr>
+                              <td colspan="3" class="text-center">Tidak ada riwayat pemeriksaan sebelumnya</td>
+                            </tr>
+                          @endif
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -118,68 +130,92 @@
     </div>
     <!-- /.row -->
     
-    <div class="row">
+    <!-- Form Input Hasil Pemeriksaan -->
+    <div class="row g-4">
       <div class="col-md-12">
-        <form action="{{ route('dokter.periksa.update', $periksa->id) }}" method="POST">
-          @csrf
-          @method('PUT')
-          <div class="card card-primary">
-            <div class="card-header">
-              <h3 class="card-title">Input Hasil Pemeriksaan</h3>
-            </div>
-            <!-- /.card-header -->
+        <div class="card shadow-sm">
+          <div class="card-header bg-success text-white">
+            <strong>Form Input Hasil Pemeriksaan</strong>
+          </div>
+          <form action="{{ route('dokter.periksa.update', $daftarPoli->id) }}" method="POST" class="m-0">
+            @csrf
+            @method('PUT')
             <div class="card-body">
-              <div class="row">
+              <div class="row g-3">
                 <div class="col-md-6">
-                  <div class="form-group">
-                    <label for="catatan">Diagnosa & Catatan Pemeriksaan</label>
-                    <textarea class="form-control @error('catatan') is-invalid @enderror" id="catatan" name="catatan" rows="4" required>{{ old('catatan') }}</textarea>
+                  <div class="mb-3">
+                    <label for="catatan" class="form-label">Diagnosa & Catatan Pemeriksaan</label>
+                    <textarea class="form-control @error('catatan') is-invalid @enderror" 
+                              id="catatan" name="catatan" rows="5" required 
+                              placeholder="Masukkan diagnosa dan catatan pemeriksaan...">{{ old('catatan', $periksa->catatan ?? '') }}</textarea>
                     @error('catatan')
-                    <div class="invalid-feedback">
-                      {{ $message }}
-                    </div>
+                      <div class="invalid-feedback">
+                        {{ $message }}
+                      </div>
                     @enderror
                   </div>
-                  <div class="form-group">
-                    <label for="biaya_periksa">Biaya Pemeriksaan (Rp)</label>
-                    <input type="number" class="form-control @error('biaya_periksa') is-invalid @enderror" id="biaya_periksa" name="biaya_periksa" value="{{ old('biaya_periksa', 150000) }}" required>
+                  <div class="mb-3">
+                    <label for="biaya_periksa" class="form-label">Biaya Pemeriksaan (Rp)</label>
+                    <input type="number" class="form-control @error('biaya_periksa') is-invalid @enderror" 
+                           id="biaya_periksa" name="biaya_periksa" 
+                           value="{{ old('biaya_periksa', $periksa->biaya_periksa ?? 150000) }}" 
+                           min="0" required>
                     @error('biaya_periksa')
-                    <div class="invalid-feedback">
-                      {{ $message }}
-                    </div>
+                      <div class="invalid-feedback">
+                        {{ $message }}
+                      </div>
                     @enderror
-                    <small class="text-muted">*Belum termasuk harga obat</small>
+                    <small class="text-muted">*Biaya jasa dokter: Rp 150.000 (belum termasuk obat)</small>
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="form-group">
-                    <label>Obat yang Diresepkan</label>
-                    <select class="select2" multiple="multiple" name="obat_ids[]" data-placeholder="Pilih obat" style="width: 100%;">
+                  <div class="mb-3">
+                    <label class="form-label">Obat yang Diresepkan</label>
+                    <select class="select2" multiple="multiple" name="obat_ids[]" 
+                            data-placeholder="Pilih obat yang diresepkan" style="width: 100%;">
                       @foreach($obats as $obat)
-                        <option value="{{ $obat->id }}">{{ $obat->nama_obat }} ({{ $obat->kemasan }}) - Rp {{ number_format($obat->harga, 0, ',', '.') }}</option>
+                        <option value="{{ $obat->id }}" 
+                                {{ (collect(old('obat_ids', $periksa ? $periksa->obat->pluck('id')->toArray() : []))->contains($obat->id)) ? 'selected' : '' }}>
+                          {{ $obat->nama_obat }} ({{ $obat->kemasan }}) - Rp {{ number_format($obat->harga, 0, ',', '.') }}
+                        </option>
                       @endforeach
                     </select>
-                    <small class="text-muted">*Pilih beberapa obat yang diresepkan</small>
+                    <small class="text-muted">*Pilih beberapa obat yang akan diresepkan</small>
                   </div>
+                  
+                  <!-- Preview Biaya -->
                   <div class="alert alert-info mt-3">
-                    <i class="icon fas fa-info-circle"></i> Harga obat akan ditambahkan otomatis ke biaya pemeriksaan.
+                    <h6><i class="icon fas fa-info-circle"></i> Preview Biaya:</h6>
+                    <table class="table table-sm mb-0">
+                      <tr>
+                        <td>Biaya Jasa Dokter:</td>
+                        <td class="text-right"><strong>Rp 150.000</strong></td>
+                      </tr>
+                      <tr id="biaya-obat-row" style="display: none;">
+                        <td>Biaya Obat:</td>
+                        <td class="text-right" id="biaya-obat"><strong>Rp 0</strong></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Total Biaya:</strong></td>
+                        <td class="text-right" id="total-biaya"><strong>Rp 150.000</strong></td>
+                      </tr>
+                    </table>
                   </div>
                 </div>
               </div>
-              <!-- /.row -->
             </div>
-            <!-- /.card-body -->
-            <div class="card-footer">
-              <button type="submit" class="btn btn-primary">Simpan Hasil Pemeriksaan</button>
-              <a href="{{ route('dokter.periksa') }}" class="btn btn-default">Kembali</a>
+            <div class="card-footer bg-light">
+              <button type="submit" class="btn btn-success">
+                <i class="fas fa-save"></i> Simpan Hasil Pemeriksaan
+              </button>
+              <a href="{{ route('dokter.periksa') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Kembali
+              </a>
             </div>
-          </div>
-          <!-- /.card -->
-        </form>
+          </form>
+        </div>
       </div>
-      <!-- /.col -->
     </div>
-    <!-- /.row -->
   </div>
   <!-- /.container-fluid -->
 </section>
@@ -196,11 +232,52 @@
 <!-- Select2 -->
 <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
 <script>
-  $(function () {
+$(function () {
     //Initialize Select2 Elements
     $('.select2').select2({
-      theme: 'bootstrap4'
+      theme: 'bootstrap4',
+      placeholder: 'Pilih obat yang diresepkan',
+      allowClear: true
     });
-  });
+    
+    // Data obat untuk kalkulasi
+    var obatData = {
+        @foreach($obats as $obat)
+        '{{ $obat->id }}': {{ $obat->harga }},
+        @endforeach
+    };
+    
+    // Fungsi hitung biaya
+    function hitungBiaya() {
+        var selectedObat = $('.select2').val() || [];
+        var biayaObat = 0;
+        var biayaJasaDokter = 150000;
+        
+        selectedObat.forEach(function(obatId) {
+            biayaObat += obatData[obatId] || 0;
+        });
+        
+        var totalBiaya = biayaJasaDokter + biayaObat;
+        
+        // Update display
+        $('#biaya-obat').html('<strong>Rp ' + biayaObat.toLocaleString('id-ID') + '</strong>');
+        $('#total-biaya').html('<strong>Rp ' + totalBiaya.toLocaleString('id-ID') + '</strong>');
+        $('#biaya_periksa').val(totalBiaya);
+        
+        if (biayaObat > 0) {
+            $('#biaya-obat-row').show();
+        } else {
+            $('#biaya-obat-row').hide();
+        }
+    }
+    
+    // Event listener untuk perubahan obat
+    $('.select2').on('change', function() {
+        hitungBiaya();
+    });
+    
+    // Hitung biaya awal
+    hitungBiaya();
+});
 </script>
 @endsection

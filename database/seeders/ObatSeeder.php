@@ -1,81 +1,35 @@
 <?php
 
+// database/seeders/ObatSeeder.php
 namespace Database\Seeders;
 
-use App\Models\DetailPeriksa;
-use App\Models\Periksa;
-use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Obat;
 use Illuminate\Database\Seeder;
 
-class PeriksaSeeder extends Seeder
+class ObatSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Pemeriksaan yang sudah selesai
-        $periksa1 = Periksa::create([
-            'id_pasien' => 3, // Citra Dewi
-            'id_dokter' => 1, // Dr. Andi Pratama
-            'tgl_periksa' => Carbon::now()->subDays(5),
-            'catatan' => 'Pasien mengeluh demam dan sakit kepala. Diagnosis: Demam virus.',
-            'biaya_periksa' => 185000, // 150000 + 35000 (obat)
-        ]);
+        $obats = [
+            ['nama_obat' => 'Paracetamol', 'kemasan' => 'Tablet 500mg', 'harga' => 10000],
+            ['nama_obat' => 'Amoxicillin', 'kemasan' => 'Kapsul 500mg', 'harga' => 25000],
+            ['nama_obat' => 'Ibuprofen', 'kemasan' => 'Tablet 400mg', 'harga' => 15000],
+            ['nama_obat' => 'Omeprazole', 'kemasan' => 'Kapsul 20mg', 'harga' => 20000],
+            ['nama_obat' => 'Levofloxacin', 'kemasan' => 'Tablet 500mg', 'harga' => 35000],
+            ['nama_obat' => 'Cetirizine', 'kemasan' => 'Tablet 10mg', 'harga' => 8000],
+            ['nama_obat' => 'Vitamin C', 'kemasan' => 'Tablet 500mg', 'harga' => 5000],
+            ['nama_obat' => 'Antasida', 'kemasan' => 'Suspensi 60ml', 'harga' => 18000],
+            ['nama_obat' => 'Diazepam', 'kemasan' => 'Tablet 5mg', 'harga' => 12000],
+            ['nama_obat' => 'Metformin', 'kemasan' => 'Tablet 500mg', 'harga' => 15000],
+            ['nama_obat' => 'Captopril', 'kemasan' => 'Tablet 25mg', 'harga' => 13000],
+            ['nama_obat' => 'Simvastatin', 'kemasan' => 'Tablet 20mg', 'harga' => 22000],
+            ['nama_obat' => 'Salbutamol', 'kemasan' => 'Inhaler 100mcg', 'harga' => 45000],
+            ['nama_obat' => 'Dexamethasone', 'kemasan' => 'Tablet 0.5mg', 'harga' => 8500],
+            ['nama_obat' => 'Furosemide', 'kemasan' => 'Tablet 40mg', 'harga' => 11000],
+        ];
 
-        // Tambahkan obat untuk periksa1
-        DetailPeriksa::create([
-            'id_periksa' => $periksa1->id,
-            'id_obat' => 1, // Paracetamol
-        ]);
-        
-        DetailPeriksa::create([
-            'id_periksa' => $periksa1->id,
-            'id_obat' => 7, // Vitamin C
-        ]);
-
-        // Pemeriksaan yang sudah selesai 2
-        $periksa2 = Periksa::create([
-            'id_pasien' => 4, // Deni Kurniawan
-            'id_dokter' => 2, // Dr. Budi Santoso
-            'tgl_periksa' => Carbon::now()->subDays(3),
-            'catatan' => 'Pasien mengeluh batuk pilek dan demam ringan. Diagnosis: Infeksi saluran pernapasan atas.',
-            'biaya_periksa' => 198000, // 150000 + 48000 (obat)
-        ]);
-
-        // Tambahkan obat untuk periksa2
-        DetailPeriksa::create([
-            'id_periksa' => $periksa2->id,
-            'id_obat' => 1, // Paracetamol
-        ]);
-        
-        DetailPeriksa::create([
-            'id_periksa' => $periksa2->id,
-            'id_obat' => 2, // Amoxicillin
-        ]);
-        
-        DetailPeriksa::create([
-            'id_periksa' => $periksa2->id,
-            'id_obat' => 6, // Cetirizine
-        ]);
-
-        // Pemeriksaan yang belum selesai (menunggu dokter)
-        Periksa::create([
-            'id_pasien' => 5, // Eka Putri
-            'id_dokter' => 1, // Dr. Andi Pratama
-            'tgl_periksa' => Carbon::now()->addHours(2),
-            'catatan' => 'Keluhan: Sakit perut bagian bawah dan mual sejak 2 hari yang lalu.',
-            'biaya_periksa' => 0, // Belum diperiksa
-        ]);
-
-        // Pemeriksaan yang belum selesai (menunggu dokter)
-        Periksa::create([
-            'id_pasien' => 3, // Citra Dewi
-            'id_dokter' => 2, // Dr. Budi Santoso
-            'tgl_periksa' => Carbon::now()->addDays(1),
-            'catatan' => 'Keluhan: Nyeri sendi dan otot, terutama di pagi hari.',
-            'biaya_periksa' => 0, // Belum diperiksa
-        ]);
+        foreach ($obats as $obat) {
+            Obat::create($obat);
+        }
     }
 }

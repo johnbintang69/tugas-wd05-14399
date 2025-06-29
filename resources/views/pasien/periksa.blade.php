@@ -25,11 +25,29 @@
 <!-- Main content -->
 <section class="content">
   <div class="container-fluid">
+    <!-- Alert Messages -->
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      <i class="icon fas fa-check"></i> {{ session('success') }}
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      <i class="icon fas fa-ban"></i> {{ session('error') }}
+    </div>
+    @endif
+
     <div class="row">
       <div class="col-md-6">
         <div class="card card-primary">
           <div class="card-header">
-            <h3 class="card-title">Form Daftar Periksa</h3>
+            <h3 class="card-title">
+              <i class="fas fa-plus mr-2"></i>
+              Form Daftar Periksa
+            </h3>
           </div>
           <!-- /.card-header -->
           <!-- form start -->
@@ -37,55 +55,66 @@
             @csrf
             <div class="card-body">
               <div class="form-group">
-                <label for="nama">Nama Anda</label>
+                <label for="nama">Nama Pasien</label>
                 <input type="text" class="form-control" id="nama" name="nama" value="{{ Auth::user()->nama }}" readonly>
+                <small class="text-muted">No. RM: {{ Auth::user()->pasien->no_rm ?? 'N/A' }}</small>
               </div>
+              
               <div class="form-group">
-                <label for="id_dokter">Pilih Dokter</label>
-                <select class="form-control @error('id_dokter') is-invalid @enderror" id="id_dokter" name="id_dokter" required>
-                  <option value="">-- Pilih Dokter --</option>
-                  @foreach($dokters ?? [] as $dokter)
-                  <option value="{{ $dokter->id }}">{{ $dokter->nama }}</option>
+                <label for="id_jadwal">Pilih Jadwal Dokter</label>
+                <select class="form-control @error('id_jadwal') is-invalid @enderror" id="id_jadwal" name="id_jadwal" required>
+                  <option value="">-- Pilih Jadwal Dokter --</option>
+                  @foreach($jadwals ?? [] as $jadwal)
+                  <option value="{{ $jadwal->id }}" 
+                          data-dokter="{{ $jadwal->dokter->nama }}"
+                          data-poli="{{ $jadwal->dokter->poli->nama_poli }}"
+                          data-hari="{{ $jadwal->hari }}"
+                          data-jam="{{ $jadwal->jam_mulai->format('H:i') }} - {{ $jadwal->jam_selesai->format('H:i') }}"
+                          {{ old('id_jadwal') == $jadwal->id ? 'selected' : '' }}>
+                    {{ $jadwal->dokter->nama }} | {{ $jadwal->dokter->poli->nama_poli }} | 
+                    {{ $jadwal->hari }}, {{ $jadwal->jam_mulai->format('H:i') }}-{{ $jadwal->jam_selesai->format('H:i') }}
+                  </option>
                   @endforeach
-                  @if(empty($dokters))
-                  <option value="1">Dr. Andi Pratama</option>
-                  <option value="2">Dr. Budi Santoso</option>
-                  @endif
                 </select>
-                @error('id_dokter')
+                @error('id_jadwal')
                 <div class="invalid-feedback">
                   {{ $message }}
                 </div>
                 @enderror
+                <small class="text-muted">Pilih jadwal dokter sesuai dengan keluhan Anda</small>
               </div>
-              <div class="form-group">
-                <label for="tgl_periksa">Tanggal & Waktu Periksa</label>
-                <div class="input-group date" id="tgl_periksa_picker" data-target-input="nearest">
-                  <input type="text" class="form-control datetimepicker-input @error('tgl_periksa') is-invalid @enderror" id="tgl_periksa" name="tgl_periksa" data-target="#tgl_periksa_picker" required readonly style="background-color: #fff; cursor: pointer;">
-                  <div class="input-group-append" data-target="#tgl_periksa_picker" data-toggle="datetimepicker">
-                    <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                  </div>
-                  @error('tgl_periksa')
-                  <div class="invalid-feedback">
-                    {{ $message }}
-                  </div>
-                  @enderror
-                </div>
-              </div>
+              
               <div class="form-group">
                 <label for="keluhan">Keluhan</label>
-                <textarea class="form-control @error('keluhan') is-invalid @enderror" id="keluhan" name="keluhan" rows="3" placeholder="Deskripsikan keluhan Anda" required></textarea>
+                <textarea class="form-control @error('keluhan') is-invalid @enderror" 
+                          id="keluhan" name="keluhan" rows="4" 
+                          placeholder="Deskripsikan keluhan Anda secara detail (gejala, durasi, tingkat nyeri, dll)" 
+                          required>{{ old('keluhan') }}</textarea>
                 @error('keluhan')
                 <div class="invalid-feedback">
                   {{ $message }}
                 </div>
                 @enderror
+                <small class="text-muted">Jelaskan keluhan dengan detail untuk membantu dokter dalam diagnosa</small>
+              </div>
+
+              <!-- Info Jadwal Terpilih -->
+              <div id="jadwal-info" class="alert alert-info" style="display: none;">
+                <h6><i class="icon fas fa-info-circle"></i> Informasi Jadwal Terpilih:</h6>
+                <ul class="mb-0">
+                  <li><strong>Dokter:</strong> <span id="info-dokter">-</span></li>
+                  <li><strong>Poliklinik:</strong> <span id="info-poli">-</span></li>
+                  <li><strong>Hari & Jam:</strong> <span id="info-jadwal">-</span></li>
+                  <li><strong>Estimasi Antrian:</strong> <span id="info-antrian">Akan ditentukan setelah mendaftar</span></li>
+                </ul>
               </div>
             </div>
             <!-- /.card-body -->
 
             <div class="card-footer">
-              <button type="submit" class="btn btn-primary">Daftar Periksa</button>
+              <button type="submit" class="btn btn-primary btn-block">
+                <i class="fas fa-plus"></i> Daftar Periksa Sekarang
+              </button>
             </div>
           </form>
         </div>
@@ -94,98 +123,224 @@
       <div class="col-md-6">
         <div class="card card-info">
           <div class="card-header">
-            <h3 class="card-title">Informasi Dokter</h3>
+            <h3 class="card-title">
+              <i class="fas fa-info-circle mr-2"></i>
+              Informasi Pendaftaran
+            </h3>
           </div>
           <div class="card-body">
             <div class="alert alert-info">
-              <h5><i class="icon fas fa-info"></i> Informasi Pendaftaran</h5>
-              <p>Silahkan pilih dokter dan waktu untuk melakukan pendaftaran periksa. Pastikan Anda datang 15 menit sebelum jadwal yang dipilih.</p>
+              <h5><i class="icon fas fa-lightbulb"></i> Cara Mendaftar:</h5>
+              <ol class="mb-0 pl-3">
+                <li>Pilih jadwal dokter sesuai dengan keluhan Anda</li>
+                <li>Isi keluhan dengan detail yang jelas</li>
+                <li>Klik "Daftar Periksa" untuk mendapatkan nomor antrian</li>
+                <li>Datang <strong>15 menit sebelum</strong> jadwal praktik</li>
+                <li>Bawa kartu identitas dan kartu peserta (jika ada)</li>
+              </ol>
             </div>
             
-            <h5>Jadwal Praktik Dokter</h5>
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>Nama Dokter</th>
-                  <th>Jadwal Praktik</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach($dokters ?? [] as $dokter)
-                <tr>
-                  <td>{{ $dokter->nama }}</td>
-                  <td>Senin - Jumat, 08:00 - 16:00</td>
-                </tr>
-                @endforeach
-                @if(empty($dokters))
-                <tr>
-                  <td>Dr. Andi Pratama</td>
-                  <td>Senin - Jumat, 08:00 - 16:00</td>
-                </tr>
-                <tr>
-                  <td>Dr. Budi Santoso</td>
-                  <td>Senin - Sabtu, 09:00 - 17:00</td>
-                </tr>
-                @endif
-              </tbody>
-            </table>
+            <h5>
+              <i class="fas fa-calendar-alt mr-2"></i>
+              Jadwal Dokter Tersedia
+            </h5>
+            @if(count($jadwals) > 0)
+              <div class="table-responsive">
+                <table class="table table-sm table-striped">
+                  <thead class="bg-light">
+                    <tr>
+                      <th>Dokter</th>
+                      <th>Poli</th>
+                      <th>Hari</th>
+                      <th>Jam</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @foreach($jadwals as $jadwal)
+                    <tr>
+                      <td>
+                        <strong>{{ $jadwal->dokter->nama }}</strong>
+                      </td>
+                      <td>
+                        <span class="badge badge-info">{{ $jadwal->dokter->poli->nama_poli }}</span>
+                      </td>
+                      <td>{{ $jadwal->hari }}</td>
+                      <td>
+                        <small>{{ $jadwal->jam_mulai->format('H:i') }} - {{ $jadwal->jam_selesai->format('H:i') }}</small>
+                      </td>
+                    </tr>
+                    @endforeach
+                  </tbody>
+                </table>
+              </div>
+            @else
+              <div class="alert alert-warning">
+                <i class="icon fas fa-exclamation-triangle"></i>
+                <strong>Tidak ada jadwal dokter yang aktif saat ini.</strong><br>
+                Silakan hubungi administrator atau coba lagi nanti.
+              </div>
+            @endif
             
-            <h5 class="mt-4">Biaya Periksa</h5>
-            <p>Biaya dasar pemeriksaan: <strong>Rp 150.000</strong></p>
-            <p>Harga obat akan ditambahkan sesuai dengan resep dokter.</p>
+            <hr>
+            
+            <h5>
+              <i class="fas fa-money-bill-wave mr-2"></i>
+              Biaya Periksa
+            </h5>
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <tr>
+                  <td><strong>Biaya Konsultasi Dokter</strong></td>
+                  <td class="text-right"><strong>Rp 150.000</strong></td>
+                </tr>
+                <tr>
+                  <td>Biaya Obat</td>
+                  <td class="text-right">Sesuai resep dokter</td>
+                </tr>
+                <tr class="bg-light">
+                  <td><strong>Total Minimal</strong></td>
+                  <td class="text-right"><strong>Rp 150.000</strong></td>
+                </tr>
+              </table>
+            </div>
+            <small class="text-muted">*Biaya final akan dihitung setelah pemeriksaan selesai</small>
           </div>
         </div>
       </div>
     </div>
     
-    <div class="row">
+    <!-- Daftar Antrian Yang Akan Datang -->
+    <div class="row mt-4">
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Daftar Periksa Yang Akan Datang</h3>
+            <h3 class="card-title">
+              <i class="fas fa-clock mr-2"></i>
+              Daftar Antrian Anda
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-tool" onclick="location.reload();">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+            </div>
           </div>
-          <!-- /.card-header -->
-          <div class="card-body table-responsive p-0">
-            <table class="table table-hover text-nowrap">
+          <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped" id="upcomingPeriksaTable">
               <thead>
                 <tr>
-                  <th>No</th>
-                  <th>Tanggal Periksa</th>
+                  <th width="5%">No</th>
+                  <th>Tanggal Daftar</th>
                   <th>Dokter</th>
+                  <th>Poli</th>
+                  <th>Jadwal</th>
+                  <th>No. Antrian</th>
                   <th>Status</th>
-                  <th>Aksi</th>
+                  <th width="15%">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 @if(isset($upcoming_periksa) && count($upcoming_periksa) > 0)
                   @foreach($upcoming_periksa as $key => $periksa)
-                  <tr>
-                    <td>{{ $key + 1 }}</td>
-                    <td>{{ \Carbon\Carbon::parse($periksa->tgl_periksa)->format('d M Y H:i') }}</td>
-                    <td>{{ $periksa->dokter->nama }}</td>
-                    <td><span class="badge badge-warning">Menunggu</span></td>
-                    <td>
-                      <form action="{{ route('pasien.periksa.destroy', $periksa->id) }}" method="POST" class="d-inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Apakah Anda yakin ingin membatalkan pendaftaran?')">
-                          <i class="fas fa-trash"></i> Batalkan
-                        </button>
-                      </form>
-                    </td>
-                  </tr>
+                    <tr>
+                      <td>{{ $key + 1 }}</td>
+                      <td>{{ \Carbon\Carbon::parse($periksa->tanggal_daftar)->format('d M Y') }}</td>
+                      <td>
+                        <strong>{{ $periksa->jadwal->dokter->nama }}</strong>
+                      </td>
+                      <td>
+                        <span class="badge badge-info">{{ $periksa->jadwal->dokter->poli->nama_poli }}</span>
+                      </td>
+                      <td>
+                        <small>
+                          {{ $periksa->jadwal->hari }}<br>
+                          {{ $periksa->jadwal->jam_mulai->format('H:i') }} - {{ $periksa->jadwal->jam_selesai->format('H:i') }}
+                        </small>
+                      </td>
+                      <td>
+                        <span class="badge badge-primary badge-lg">
+                          <i class="fas fa-hashtag"></i> {{ $periksa->no_antrian }}
+                        </span>
+                      </td>
+                      <td>
+                        @if($periksa->status == 'menunggu')
+                          <span class="badge badge-warning">
+                            <i class="fas fa-clock"></i> Menunggu
+                          </span>
+                        @elseif($periksa->status == 'sedang_diperiksa')
+                          <span class="badge badge-info">
+                            <i class="fas fa-stethoscope"></i> Sedang Diperiksa
+                          </span>
+                        @else
+                          <span class="badge badge-success">
+                            <i class="fas fa-check"></i> Selesai
+                          </span>
+                        @endif
+                      </td>
+                      <td>
+                        @if($periksa->status == 'menunggu')
+                          <button type="button" class="btn btn-sm btn-danger btn-cancel" 
+                                  data-id="{{ $periksa->id }}"
+                                  data-dokter="{{ $periksa->jadwal->dokter->nama }}"
+                                  data-antrian="{{ $periksa->no_antrian }}">
+                            <i class="fas fa-times"></i> Batalkan
+                          </button>
+                        @else
+                          <span class="text-muted">
+                            <i class="fas fa-lock"></i> Tidak dapat dibatalkan
+                          </span>
+                        @endif
+                      </td>
+                    </tr>
                   @endforeach
                 @else
                   <tr>
-                    <td colspan="5" class="text-center">Belum ada jadwal pemeriksaan yang akan datang.</td>
+                    <td colspan="8" class="text-center py-4">
+                      <div class="text-muted">
+                        <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                        <p class="mb-2">Belum ada jadwal pemeriksaan yang akan datang.</p>
+                        <small>Gunakan form di atas untuk mendaftar pemeriksaan baru.</small>
+                      </div>
+                    </td>
                   </tr>
                 @endif
               </tbody>
             </table>
           </div>
-          <!-- /.card-body -->
         </div>
-        <!-- /.card -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal Konfirmasi Batalkan -->
+  <div class="modal fade" id="cancelModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-danger">
+          <h5 class="modal-title">Konfirmasi Pembatalan</h5>
+          <button type="button" class="close" data-dismiss="modal">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Apakah Anda yakin ingin membatalkan pendaftaran periksa?</p>
+          <div class="alert alert-info">
+            <strong>Detail Pendaftaran:</strong><br>
+            <strong>Dokter:</strong> <span id="cancel-dokter"></span><br>
+            <strong>No. Antrian:</strong> <span id="cancel-antrian"></span>
+          </div>
+          <p class="text-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Perhatian:</strong> Pembatalan tidak dapat dilakukan kurang dari 2 jam sebelum jadwal praktek.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Tidak</button>
+          <form id="cancelForm" method="POST">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-danger">Ya, Batalkan</button>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -194,47 +349,74 @@
 @endsection
 
 @section('styles')
-<!-- Tempusdominus Bootstrap 4 -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tempusdominus-bootstrap-4@5.39.0/build/css/tempusdominus-bootstrap-4.min.css" />
+<!-- DataTables -->
+<link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+<link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
 @endsection
 
 @section('scripts')
-<!-- Moment.js and Tempus Dominus Bootstrap 4 via CDN -->
-<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tempusdominus-bootstrap-4@5.39.0/build/js/tempusdominus-bootstrap-4.min.js"></script>
+<!-- DataTables -->
+<script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+<script src="{{ asset('plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+<script src="{{ asset('plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
+
 <script>
-  $(function () {
-    $('#tgl_periksa_picker').datetimepicker({
-      format: 'YYYY-MM-DD HH:mm',
-      icons: {
-        time: 'far fa-clock',
-        date: 'far fa-calendar-alt',
-        up: 'fas fa-arrow-up',
-        down: 'fas fa-arrow-down',
-        previous: 'fas fa-chevron-left',
-        next: 'fas fa-chevron-right',
-        today: 'fas fa-calendar-check',
-        clear: 'far fa-trash-alt',
-        close: 'far fa-times-circle'
-      },
-      minDate: moment().startOf('day'),
-      stepping: 30,
-      enabledHours: [8, 9, 10, 11, 12, 13, 14, 15, 16],
-      locale: 'id',
-      useCurrent: false,
-      allowInputToggle: true
-    });
-    // Open picker on input or icon click
-    $('#tgl_periksa, #tgl_periksa_picker .input-group-append').on('click', function() {
-      $('#tgl_periksa_picker').datetimepicker('show');
-    });
-    $('#tgl_periksa_picker').on('dp.change', function(e) {
-      var day = moment(e.date).day();
-      if (day === 6 || day === 0) {
-        alert('Mohon maaf, klinik tidak buka di hari Sabtu dan Minggu');
-        $('#tgl_periksa_picker').data("DateTimePicker").clear();
+$(function () {
+    // Auto-close alerts after 5 seconds
+    $(".alert").not('.alert-info').fadeTo(5000, 500).slideUp(500);
+    
+    // DataTable untuk upcoming periksa
+    $("#upcomingPeriksaTable").DataTable({
+      responsive: true,
+      lengthChange: false,
+      autoWidth: false,
+      order: [[ 1, "asc" ], [ 5, "asc" ]], // Sort by tanggal & antrian
+      language: {
+        search: "Cari:",
+        lengthMenu: "Tampilkan _MENU_ data per halaman",
+        zeroRecords: "Data tidak ditemukan",
+        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+        infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+        infoFiltered: "(difilter dari _MAX_ total data)",
+        paginate: {
+          first: "Pertama",
+          last: "Terakhir",
+          next: "Selanjutnya",
+          previous: "Sebelumnya"
+        }
       }
     });
-  });
+    
+    // Show jadwal info when selecting
+    $('#id_jadwal').on('change', function() {
+        var selectedOption = $(this).find('option:selected');
+        if (selectedOption.val()) {
+            $('#info-dokter').text(selectedOption.data('dokter'));
+            $('#info-poli').text(selectedOption.data('poli'));
+            $('#info-jadwal').text(selectedOption.data('hari') + ', ' + selectedOption.data('jam'));
+            $('#jadwal-info').slideDown();
+        } else {
+            $('#jadwal-info').slideUp();
+        }
+    });
+    
+    // Cancel button handler
+    $(document).on('click', '.btn-cancel', function() {
+        var id = $(this).data('id');
+        var dokter = $(this).data('dokter');
+        var antrian = $(this).data('antrian');
+        
+        $('#cancel-dokter').text(dokter);
+        $('#cancel-antrian').text('#' + antrian);
+        $('#cancelForm').attr('action', '/pasien/periksa/' + id);
+        $('#cancelModal').modal('show');
+    });
+    
+    // Auto refresh setiap 5 menit untuk update antrian
+    setInterval(function() {
+        // location.reload();
+    }, 300000); // 5 minutes
+});
 </script>
 @endsection

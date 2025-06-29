@@ -1,5 +1,5 @@
 <?php
-
+// app/Http/Middleware/CheckRole.php (UPDATED)
 namespace App\Http\Middleware;
 
 use Closure;
@@ -22,14 +22,37 @@ class CheckRole
 
         $user = Auth::user();
         
-        if ($role == 'dokter' && !$user->isDokter()) {
-            return redirect()->route('pasien.dashboard')
-                ->with('error', 'Anda tidak memiliki akses ke halaman dokter!');
+        // Cek role admin
+        if ($role == 'admin' && !$user->isAdmin()) {
+            if ($user->isDokter()) {
+                return redirect()->route('dokter.dashboard')
+                    ->with('error', 'Anda tidak memiliki akses ke halaman admin!');
+            } else {
+                return redirect()->route('pasien.dashboard')
+                    ->with('error', 'Anda tidak memiliki akses ke halaman admin!');
+            }
         }
         
+        // Cek role dokter
+        if ($role == 'dokter' && !$user->isDokter()) {
+            if ($user->isAdmin()) {
+                return redirect()->route('admin.dashboard')
+                    ->with('error', 'Anda tidak memiliki akses ke halaman dokter!');
+            } else {
+                return redirect()->route('pasien.dashboard')
+                    ->with('error', 'Anda tidak memiliki akses ke halaman dokter!');
+            }
+        }
+        
+        // Cek role pasien
         if ($role == 'pasien' && !$user->isPasien()) {
-            return redirect()->route('dokter.dashboard')
-                ->with('error', 'Anda tidak memiliki akses ke halaman pasien!');
+            if ($user->isAdmin()) {
+                return redirect()->route('admin.dashboard')
+                    ->with('error', 'Anda tidak memiliki akses ke halaman pasien!');
+            } else {
+                return redirect()->route('dokter.dashboard')
+                    ->with('error', 'Anda tidak memiliki akses ke halaman pasien!');
+            }
         }
 
         return $next($request);

@@ -25,71 +25,154 @@
 <!-- Main content -->
 <section class="content">
   <div class="container-fluid">
+    <!-- Alert Messages -->
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      <i class="icon fas fa-check"></i> {{ session('success') }}
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      <i class="icon fas fa-ban"></i> {{ session('error') }}
+    </div>
+    @endif
+
+    <!-- Info Cards -->
+    <div class="row">
+      <div class="col-lg-6 col-6">
+        <div class="small-box bg-info">
+          <div class="inner">
+            <h3>{{ $total_antrian_hari_ini ?? 0 }}</h3>
+            <p>Total Antrian Hari Ini</p>
+          </div>
+          <div class="icon">
+            <i class="ion ion-clock"></i>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-6 col-6">
+        <div class="small-box bg-success">
+          <div class="inner">
+            <h3>{{ $total_selesai_hari_ini ?? 0 }}</h3>
+            <p>Sudah Diperiksa Hari Ini</p>
+          </div>
+          <div class="icon">
+            <i class="ion ion-checkmark"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <!-- Daftar Pasien Yang Perlu Diperiksa -->
     <div class="row">
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Daftar Pasien Yang Perlu Diperiksa</h3>
+            <h3 class="card-title">
+              <i class="fas fa-stethoscope mr-2"></i>
+              Daftar Pasien Yang Perlu Diperiksa
+            </h3>
             <div class="card-tools">
-              <div class="input-group input-group-sm" style="width: 150px;">
-                <input type="text" name="table_search" class="form-control float-right" placeholder="Search">
-                <div class="input-group-append">
-                  <button type="submit" class="btn btn-default">
-                    <i class="fas fa-search"></i>
-                  </button>
-                </div>
-              </div>
+              <button type="button" class="btn btn-tool" onclick="location.reload();">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
             </div>
           </div>
-          <!-- /.card-header -->
-          <div class="card-body table-responsive p-0">
-            <table class="table table-hover text-nowrap">
+          <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped" id="periksaTable">
               <thead>
                 <tr>
-                  <th>No</th>
-                  <th>ID Periksa</th>
+                  <th width="5%">No</th>
+                  <th>ID Daftar</th>
                   <th>Pasien</th>
-                  <th>Tanggal Periksa</th>
+                  <th>Tanggal Daftar</th>
+                  <th>No. Antrian</th>
+                  <th>Keluhan</th>
                   <th>Status</th>
-                  <th>Aksi</th>
+                  <th width="15%">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 @if(isset($periksa_pasiens) && count($periksa_pasiens) > 0)
-                  @foreach($periksa_pasiens as $key => $periksa)
+                  @foreach($periksa_pasiens as $key => $daftarPoli)
+                    <tr>
+                      <td>{{ $key + 1 }}</td>
+                      <td>
+                        <span class="badge badge-primary">#{{ $daftarPoli->id }}</span>
+                      </td>
+                      <td>
+                        <strong>{{ $daftarPoli->pasien->nama }}</strong><br>
+                        <small class="text-muted">{{ $daftarPoli->pasien->no_rm }}</small>
+                      </td>
+                      <td>{{ \Carbon\Carbon::parse($daftarPoli->tanggal_daftar)->format('d M Y') }}</td>
+                      <td>
+                        <span class="badge badge-warning badge-lg">
+                          <i class="fas fa-hashtag"></i> {{ $daftarPoli->no_antrian }}
+                        </span>
+                      </td>
+                      <td>
+                        <div style="max-width: 200px;">
+                          {{ Str::limit($daftarPoli->keluhan, 100) }}
+                          @if(strlen($daftarPoli->keluhan) > 100)
+                            <br><small><a href="#" class="text-primary" data-toggle="modal" data-target="#modal-keluhan-{{ $daftarPoli->id }}">Lihat selengkapnya</a></small>
+                          @endif
+                        </div>
+                      </td>
+                      <td>
+                        @if($daftarPoli->status == 'menunggu')
+                          <span class="badge badge-warning">
+                            <i class="fas fa-clock"></i> Menunggu
+                          </span>
+                        @elseif($daftarPoli->status == 'sedang_diperiksa')
+                          <span class="badge badge-info">
+                            <i class="fas fa-stethoscope"></i> Sedang Diperiksa
+                          </span>
+                        @else
+                          <span class="badge badge-success">
+                            <i class="fas fa-check"></i> Selesai
+                          </span>
+                        @endif
+                      </td>
+                      <td>
+                        @if($daftarPoli->status == 'menunggu' || $daftarPoli->status == 'sedang_diperiksa')
+                          <a href="{{ route('dokter.periksa.edit', $daftarPoli->id) }}" 
+                             class="btn btn-primary btn-sm" title="Mulai Pemeriksaan">
+                            <i class="fas fa-stethoscope"></i> Periksa
+                          </a>
+                        @else
+                          @if($daftarPoli->periksa)
+                            <a href="{{ route('dokter.periksa.show', $daftarPoli->periksa->id) }}" 
+                               class="btn btn-info btn-sm" title="Lihat Detail">
+                              <i class="fas fa-eye"></i> Detail
+                            </a>
+                          @endif
+                        @endif
+                      </td>
+                    </tr>
+                  @endforeach
+                @else
                   <tr>
-                    <td>{{ $key + 1 }}</td>
-                    <td>{{ $periksa->id }}</td>
-                    <td>{{ $periksa->pasien->nama }}</td>
-                    <td>{{ \Carbon\Carbon::parse($periksa->tgl_periksa)->format('d M Y H:i') }}</td>
-                    <td>
-                      @if($periksa->catatan)
-                        <span class="badge bg-success">Selesai</span>
-                      @else
-                        <span class="badge bg-warning">Menunggu</span>
-                      @endif
-                    </td>
-                    <td>
-                      @if(!$periksa->catatan)
-                      <a href="{{ route('dokter.periksa.edit', $periksa->id) }}" class="btn btn-sm btn-primary">
-                        <i class="fas fa-stethoscope"></i> Periksa
-                      </a>
-                      @else
-                      <a href="{{ route('dokter.periksa.show', $periksa->id) }}" class="btn btn-sm btn-info">
-                        <i class="fas fa-eye"></i> Detail
-                      </a>
-                      @endif
+                    <td colspan="8" class="text-center py-4">
+                      <div class="text-muted">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p class="mb-2">Tidak ada pasien yang perlu diperiksa saat ini.</p>
+                        <small>Pasien akan muncul di sini setelah mendaftar ke jadwal Anda yang aktif.</small>
+                        <br><br>
+                        <a href="{{ route('dokter.jadwal') }}" class="btn btn-primary btn-sm">
+                          <i class="fas fa-calendar-alt"></i> Kelola Jadwal Praktik
+                        </a>
+                      </div>
                     </td>
                   </tr>
-                  @endforeach
                 @endif
               </tbody>
             </table>
           </div>
-          <!-- /.card-body -->
         </div>
-        <!-- /.card -->
       </div>
     </div>
     <!-- /.row -->
@@ -99,144 +182,121 @@
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Riwayat Pemeriksaan</h3>
+            <h3 class="card-title">
+              <i class="fas fa-history mr-2"></i>
+              Riwayat Pemeriksaan Terbaru (10 Terakhir)
+            </h3>
           </div>
-          <!-- /.card-header -->
-          <div class="card-body">
-            <table id="riwayatTable" class="table table-bordered table-striped">
+          <div class="card-body table-responsive">
+            <table class="table table-bordered table-hover" id="riwayatTable">
               <thead>
                 <tr>
-                  <th>No</th>
+                  <th width="5%">No</th>
                   <th>ID Periksa</th>
                   <th>Pasien</th>
                   <th>Tanggal Periksa</th>
                   <th>Catatan Dokter</th>
                   <th>Obat</th>
-                  <th>Biaya</th>
-                  <th>Aksi</th>
+                  <th>Biaya Periksa</th>
+                  <th width="10%">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 @if(isset($riwayat_periksa) && count($riwayat_periksa) > 0)
                   @foreach($riwayat_periksa as $key => $riwayat)
+                    <tr>
+                      <td>{{ $key + 1 }}</td>
+                      <td>
+                        <span class="badge badge-success">#{{ $riwayat->id }}</span>
+                      </td>
+                      <td>
+                        <strong>{{ $riwayat->daftarPoli->pasien->nama }}</strong><br>
+                        <small class="text-muted">{{ $riwayat->daftarPoli->pasien->no_rm }}</small>
+                      </td>
+                      <td>{{ \Carbon\Carbon::parse($riwayat->tgl_periksa)->format('d M Y') }}</td>
+                      <td>
+                        <div style="max-width: 200px;">
+                          {{ Str::limit($riwayat->catatan, 80) }}
+                        </div>
+                      </td>
+                      <td>
+                        @if(isset($riwayat->obat) && count($riwayat->obat) > 0)
+                          <span class="badge badge-info">{{ count($riwayat->obat) }} obat</span>
+                        @else
+                          <span class="text-muted">-</span>
+                        @endif
+                      </td>
+                      <td>
+                        <strong>Rp {{ number_format($riwayat->biaya_periksa, 0, ',', '.') }}</strong>
+                      </td>
+                      <td>
+                        <a href="{{ route('dokter.periksa.show', $riwayat->id) }}" 
+                           class="btn btn-info btn-sm" title="Lihat Detail">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                      </td>
+                    </tr>
+                  @endforeach
+                @else
                   <tr>
-                    <td>{{ $key + 1 }}</td>
-                    <td>{{ $riwayat->id }}</td>
-                    <td>{{ $riwayat->pasien->nama }}</td>
-                    <td>{{ \Carbon\Carbon::parse($riwayat->tgl_periksa)->format('d M Y H:i') }}</td>
-                    <td>{{ $riwayat->catatan_dokter }}</td>
-                    <td>
-                      @if(count($riwayat->obat) > 0)
-                        <ul class="pl-3 mb-0">
-                          @foreach($riwayat->obat as $obat)
-                            <li>{{ $obat->nama_obat }}</li>
-                          @endforeach
-                        </ul>
-                      @else
-                        <span class="text-muted">-</span>
-                      @endif
-                    </td>
-                    <td>Rp {{ number_format($riwayat->biaya_periksa, 0, ',', '.') }}</td>
-                    <td>
-                      <a href="{{ route('dokter.periksa.show', $riwayat->id) }}" class="btn btn-sm btn-info">
-                        <i class="fas fa-eye"></i> Detail
-                      </a>
+                    <td colspan="8" class="text-center py-4">
+                      <div class="text-muted">
+                        <i class="fas fa-file-medical fa-3x mb-3"></i>
+                        <p>Belum ada riwayat pemeriksaan.</p>
+                      </div>
                     </td>
                   </tr>
-                  @endforeach
                 @endif
               </tbody>
             </table>
           </div>
-          <!-- /.card-body -->
         </div>
-        <!-- /.card -->
       </div>
     </div>
     <!-- /.row -->
   </div>
   <!-- /.container-fluid -->
-</section>
-<!-- /.content -->
-
-<!-- Modal Periksa -->
-<div class="modal fade" id="modal-periksa">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h4 class="modal-title">Periksa Pasien</h4>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <form action="{{ route('dokter.periksa.update', 1) }}" method="POST">
-        @csrf
-        @method('PUT')
-        <div class="modal-body">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="pasien">Nama Pasien</label>
-                <input type="text" class="form-control" id="pasien" value="Citra Dewi" readonly>
-              </div>
-              <div class="form-group">
-                <label for="tgl_periksa">Tanggal Periksa</label>
-                <input type="text" class="form-control" id="tgl_periksa" value="18 Apr 2025 10:00" readonly>
-              </div>
-              <div class="form-group">
-                <label for="keluhan">Keluhan</label>
-                <textarea class="form-control" id="keluhan" rows="3" readonly>Demam dan sakit kepala selama 2 hari</textarea>
-              </div>
+  
+  <!-- Modal Detail Keluhan -->
+  @if(isset($periksa_pasiens) && count($periksa_pasiens) > 0)
+    @foreach($periksa_pasiens as $daftarPoli)
+      @if(strlen($daftarPoli->keluhan) > 100)
+      <div class="modal fade" id="modal-keluhan-{{ $daftarPoli->id }}" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header bg-info">
+              <h5 class="modal-title">Detail Keluhan Pasien</h5>
+              <button type="button" class="close" data-dismiss="modal">
+                <span>&times;</span>
+              </button>
             </div>
-            <div class="col-md-6">
-              <div class="form-group">
-                <label for="catatan">Catatan Pemeriksaan</label>
-                <textarea class="form-control @error('catatan') is-invalid @enderror" id="catatan" name="catatan" rows="3" required></textarea>
-                @error('catatan')
-                <div class="invalid-feedback">
-                  {{ $message }}
-                </div>
-                @enderror
-              </div>
-              <div class="form-group">
-                <label>Obat</label>
-                <div class="select2-purple">
-                  <select class="select2" multiple="multiple" name="obat_ids[]" data-placeholder="Pilih obat" style="width: 100%;">
-                    <option value="1">Paracetamol (Tablet 500mg) - Rp 10.000</option>
-                    <option value="2">Amoxicillin (Kapsul 500mg) - Rp 25.000</option>
-                    <option value="3">Ibuprofen (Tablet 400mg) - Rp 15.000</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="biaya_periksa">Biaya Periksa (Rp)</label>
-                <input type="number" class="form-control @error('biaya_periksa') is-invalid @enderror" id="biaya_periksa" name="biaya_periksa" value="150000" required>
-                @error('biaya_periksa')
-                <div class="invalid-feedback">
-                  {{ $message }}
-                </div>
-                @enderror
-              </div>
+            <div class="modal-body">
+              <dl class="row">
+                <dt class="col-sm-3">Pasien:</dt>
+                <dd class="col-sm-9">{{ $daftarPoli->pasien->nama }}</dd>
+                <dt class="col-sm-3">No. RM:</dt>
+                <dd class="col-sm-9">{{ $daftarPoli->pasien->no_rm }}</dd>
+                <dt class="col-sm-3">Keluhan:</dt>
+                <dd class="col-sm-9">{{ $daftarPoli->keluhan }}</dd>
+              </dl>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+              <a href="{{ route('dokter.periksa.edit', $daftarPoli->id) }}" class="btn btn-primary">
+                <i class="fas fa-stethoscope"></i> Mulai Periksa
+              </a>
             </div>
           </div>
         </div>
-        <div class="modal-footer justify-content-between">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Tutup</button>
-          <button type="submit" class="btn btn-primary">Simpan Pemeriksaan</button>
-        </div>
-      </form>
-    </div>
-    <!-- /.modal-content -->
-  </div>
-  <!-- /.modal-dialog -->
-</div>
-<!-- /.modal -->
+      </div>
+      @endif
+    @endforeach
+  @endif
+</section>
+<!-- /.content -->
 @endsection
 
 @section('styles')
-<!-- Select2 -->
-<link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
-<link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
 <!-- DataTables -->
 <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
@@ -244,8 +304,6 @@
 @endsection
 
 @section('scripts')
-<!-- Select2 -->
-<script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
 <!-- DataTables  & Plugins -->
 <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
@@ -253,19 +311,63 @@
 <script src="{{ asset('plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
 <script src="{{ asset('plugins/datatables-buttons/js/buttons.bootstrap4.min.js') }}"></script>
+
 <script>
-  $(function () {
-    //Initialize Select2 Elements
-    $('.select2').select2({
-      theme: 'bootstrap4'
+$(function () {
+    // Auto-close alerts after 5 seconds
+    $(".alert").not('.alert-info').fadeTo(5000, 500).slideUp(500);
+    
+    // DataTable untuk daftar periksa
+    $("#periksaTable").DataTable({
+      responsive: true,
+      lengthChange: false,
+      autoWidth: false,
+      order: [[ 3, "asc" ], [ 4, "asc" ]], // Sort by tanggal & antrian
+      pageLength: 10,
+      language: {
+        search: "Cari:",
+        lengthMenu: "Tampilkan _MENU_ data per halaman",
+        zeroRecords: "Data tidak ditemukan",
+        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+        infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+        infoFiltered: "(difilter dari _MAX_ total data)",
+        paginate: {
+          first: "Pertama",
+          last: "Terakhir",
+          next: "Selanjutnya",
+          previous: "Sebelumnya"
+        }
+      }
     });
     
+    // DataTable untuk riwayat
     $("#riwayatTable").DataTable({
-      "responsive": true,
-      "lengthChange": false,
-      "autoWidth": false,
-      "pageLength": 5
+      responsive: true,
+      lengthChange: false,
+      autoWidth: false,
+      order: [[ 3, "desc" ]], // Sort by tanggal periksa desc
+      pageLength: 5,
+      language: {
+        search: "Cari:",
+        lengthMenu: "Tampilkan _MENU_ data per halaman",
+        zeroRecords: "Data tidak ditemukan",
+        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+        infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+        infoFiltered: "(difilter dari _MAX_ total data)",
+        paginate: {
+          first: "Pertama",
+          last: "Terakhir",
+          next: "Selanjutnya",
+          previous: "Sebelumnya"
+        }
+      }
     });
-  });
+    
+    // Auto refresh setiap 2 menit untuk update antrian
+    setInterval(function() {
+        // Optional: auto refresh page untuk update real-time
+        // location.reload();
+    }, 120000); // 2 minutes
+});
 </script>
 @endsection

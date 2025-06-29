@@ -1,64 +1,84 @@
 <?php
-
+// database/seeders/UserSeeder.php (FIXED VERSION)
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Dokter;
+use App\Models\Pasien;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Buat user dokter
-        User::create([
-            'nama' => 'Dr. Andi Pratama',
-            'alamat' => 'Jl. Kesehatan No. 123, Jakarta',
-            'no_hp' => '08123456789',
-            'email' => 'dr.andi@example.com',
-            'role' => 'dokter',
-            'password' => Hash::make('password123'),
-        ]);
+        // Buat akun login untuk semua dokter
+        $dokters = Dokter::all();
+        foreach ($dokters as $index => $dokter) {
+            $email = $this->generateEmailFromName($dokter->nama, 'dokter', $index);
+            
+            User::create([
+                'email' => $email,
+                'password' => Hash::make('password123'),
+                'role' => 'dokter',
+                'entity_id' => $dokter->id
+            ]);
+        }
 
-        User::create([
-            'nama' => 'Dr. Budi Santoso',
-            'alamat' => 'Jl. Medis No. 45, Bandung',
-            'no_hp' => '08234567890',
-            'email' => 'dr.budi@example.com',
-            'role' => 'dokter',
-            'password' => Hash::make('password123'),
-        ]);
+        // Buat akun login untuk beberapa pasien (demo)
+        $pasiens = Pasien::limit(3)->get(); // Ambil 3 pasien pertama untuk demo
+        foreach ($pasiens as $index => $pasien) {
+            $email = $this->generateEmailFromName($pasien->nama, 'pasien', $index);
+            
+            User::create([
+                'email' => $email,
+                'password' => Hash::make('password123'),
+                'role' => 'pasien',
+                'entity_id' => $pasien->id
+            ]);
+        }
 
-        // Buat user pasien
+        // Buat akun admin
         User::create([
-            'nama' => 'Citra Dewi',
-            'alamat' => 'Jl. Sehat No. 67, Surabaya',
-            'no_hp' => '08345678901',
-            'email' => 'citra@example.com',
-            'role' => 'pasien',
-            'password' => Hash::make('password123'),
+            'email' => 'admin@poliklinik.com',
+            'password' => Hash::make('admin123'),
+            'role' => 'admin',
+            'entity_id' => null
         ]);
+    }
 
-        User::create([
-            'nama' => 'Deni Kurniawan',
-            'alamat' => 'Jl. Sentosa No. 89, Medan',
-            'no_hp' => '08456789012',
-            'email' => 'deni@example.com',
-            'role' => 'pasien',
-            'password' => Hash::make('password123'),
-        ]);
-
-        User::create([
-            'nama' => 'Eka Putri',
-            'alamat' => 'Jl. Mawar No. 12, Semarang',
-            'no_hp' => '08567890123',
-            'email' => 'eka@example.com',
-            'role' => 'pasien',
-            'password' => Hash::make('password123'),
-        ]);
+    /**
+     * Generate email dari nama dengan fallback untuk duplikasi
+     */
+    private function generateEmailFromName($nama, $role, $index = 0)
+    {
+        // Bersihkan nama dari gelar dokter
+        $cleanName = strtolower($nama);
+        $cleanName = str_replace(['dr.', 'drg.', 'sp.pd', 'sp.a', 'sp.m', 'sp.og'], '', $cleanName);
+        $cleanName = preg_replace('/[^a-zA-Z\s]/', '', $cleanName); // Hapus karakter non-huruf
+        $cleanName = trim($cleanName);
+        
+        // Ambil kata pertama dan kedua jika ada
+        $nameParts = explode(' ', $cleanName);
+        $firstName = !empty($nameParts[0]) ? $nameParts[0] : 'user';
+        $secondName = isset($nameParts[1]) ? $nameParts[1] : '';
+        
+        // Buat beberapa variasi email untuk menghindari duplikasi
+        $emailVariations = [
+            $firstName . '@' . $role . '.poliklinik.com',
+            $firstName . $secondName . '@' . $role . '.poliklinik.com',
+            $firstName . ($index + 1) . '@' . $role . '.poliklinik.com',
+            $role . ($index + 1) . '@poliklinik.com'
+        ];
+        
+        // Cari email yang belum ada di database
+        foreach ($emailVariations as $email) {
+            if (!User::where('email', $email)->exists()) {
+                return $email;
+            }
+        }
+        
+        // Fallback jika semua variasi sudah ada
+        return uniqid($role . '_') . '@poliklinik.com';
     }
 }

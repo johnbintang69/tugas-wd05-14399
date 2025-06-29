@@ -53,16 +53,22 @@
                     <dd class="col-sm-8">{{ \Carbon\Carbon::parse($periksa->tgl_periksa)->format('d M Y H:i') }}</dd>
                     
                     <dt class="col-sm-4">Dokter</dt>
-                    <dd class="col-sm-8">{{ $periksa->dokter->nama }}</dd>
+                    <dd class="col-sm-8">{{ $periksa->daftarPoli->jadwal->dokter->nama }}</dd>
                     
                     <dt class="col-sm-4">Pasien</dt>
-                    <dd class="col-sm-8">{{ $periksa->pasien->nama }}</dd>
+                    <dd class="col-sm-8">{{ $periksa->daftarPoli->pasien->nama }}</dd>
+                    
+                    <dt class="col-sm-4">No. RM</dt>
+                    <dd class="col-sm-8">{{ $periksa->daftarPoli->pasien->no_rm }}</dd>
                     
                     <dt class="col-sm-4">Alamat Pasien</dt>
-                    <dd class="col-sm-8">{{ $periksa->pasien->alamat }}</dd>
+                    <dd class="col-sm-8">{{ $periksa->daftarPoli->pasien->alamat }}</dd>
                     
                     <dt class="col-sm-4">No. HP Pasien</dt>
-                    <dd class="col-sm-8">{{ $periksa->pasien->no_hp }}</dd>
+                    <dd class="col-sm-8">{{ $periksa->daftarPoli->pasien->no_hp }}</dd>
+                    
+                    <dt class="col-sm-4">Keluhan Awal</dt>
+                    <dd class="col-sm-8">{{ $periksa->daftarPoli->keluhan }}</dd>
                   </dl>
                 </div>
                 <div class="col-md-6">
@@ -128,6 +134,10 @@
                                 3 x 1 kapsul setelah makan
                               @elseif(strpos(strtolower($obat->nama_obat), 'ibuprofen') !== false)
                                 3 x 1 tablet setelah makan
+                              @elseif(strpos(strtolower($obat->nama_obat), 'antimo') !== false)
+                                1 x 1 tablet saat perlu
+                              @elseif(strpos(strtolower($obat->nama_obat), 'vitamin') !== false)
+                                1 x 1 tablet setelah makan
                               @else
                                 Sesuai petunjuk dokter
                               @endif
@@ -142,8 +152,10 @@
                 </div>
                 <div class="col-md-4 text-right">
                   <p class="mb-5">Hormat Kami,</p>
-                  <p class="mb-0"><strong>{{ $periksa->dokter->nama }}</strong></p>
-                  <p>Dokter</p>
+                  <br>
+                  <br>
+                  <p class="mb-0"><strong>{{ $periksa->daftarPoli->jadwal->dokter->nama }}</strong></p>
+                  <p>Dokter {{ $periksa->daftarPoli->jadwal->dokter->poli->nama_poli }}</p>
                 </div>
               </div>
               <!-- /.row -->
@@ -151,7 +163,12 @@
           </div>
           <!-- /.card-body -->
           <div class="card-footer">
-            <a href="{{ route('dokter.periksa') }}" class="btn btn-default">Kembali</a>
+            <a href="{{ route('dokter.periksa') }}" class="btn btn-default">
+              <i class="fas fa-arrow-left"></i> Kembali
+            </a>
+            <button type="button" class="btn btn-primary ml-2" onclick="window.print()">
+              <i class="fas fa-print"></i> Cetak Resep
+            </button>
           </div>
         </div>
         <!-- /.card -->
@@ -194,6 +211,15 @@
   
   .main-footer {
     display: none !important;
+  }
+  
+  .btn {
+    display: none !important;
+  }
+  
+  #printArea {
+    margin: 0;
+    padding: 20px;
   }
 </style>
 @endsection

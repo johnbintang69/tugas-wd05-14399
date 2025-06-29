@@ -1,3 +1,4 @@
+<!-- resources/views/auth/login.blade.php -->
 @extends('layout.auth')
 
 @section('title', 'Login')

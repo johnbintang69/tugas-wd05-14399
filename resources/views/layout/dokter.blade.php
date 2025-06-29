@@ -35,7 +35,7 @@
 
   <!-- Preloader -->
   <div class="preloader flex-column justify-content-center align-items-center">
-    <img class="animation__shake" src="{{ asset('dist/img/AdminLTELogo.png') }}" alt="Logo" height="60" width="60">
+    <img class="animation__shake" src="{{ asset('dist/img/logo/grass.png') }}" alt="Logo" height="60" width="60">
   </div>
 
   <!-- Navbar -->
@@ -57,7 +57,7 @@
           <i class="far fa-user"></i> {{ Auth::user()->nama }}
         </a>
         <div class="dropdown-menu dropdown-menu-right">
-          <a href="#" class="dropdown-item">
+          <a href="{{ route('dokter.profil') }}" class="dropdown-item">
             <i class="fas fa-user mr-2"></i> Profil
           </a>
           <div class="dropdown-divider"></div>
@@ -78,7 +78,7 @@
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
     <a href="{{ route('dokter.dashboard') }}" class="brand-link">
-      <img src="{{ asset('dist/img/avatar5.png') }}" alt="Poliklinik Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+      <img src="{{ asset('dist/img/logo/grass.png') }}" alt="Poliklinik Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
       <span class="brand-text font-weight-light">Poliklinik</span>
     </a>
 
@@ -87,10 +87,10 @@
       <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
-          <img src="{{ asset('dist/img/user2-160x160.jpg') }}" class="img-circle elevation-2" alt="User Image">
+          <img src="{{ asset('dist/img/avatar4.png') }}" class="img-circle elevation-2" alt="Dokter Image">
         </div>
         <div class="info">
-          <a href="#" class="d-block"> {{ Auth::user()->nama }}</a>
+          <a href="#" class="d-block">Dr. {{ Auth::user()->nama }}</a>
         </div>
       </div>
 
@@ -103,16 +103,33 @@
               <p>Dashboard</p>
             </a>
           </li>
+          
+          <!-- NEW: Jadwal Periksa Menu -->
           <li class="nav-item">
-            <a href="{{ route('dokter.periksa') }}" class="nav-link {{ Request::is('dokter/periksa') ? 'active' : '' }}">
+            <a href="{{ route('dokter.jadwal') }}" class="nav-link {{ Request::is('dokter/jadwal*') ? 'active' : '' }}">
+              <i class="nav-icon fas fa-calendar-alt"></i>
+              <p>Jadwal Periksa</p>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a href="{{ route('dokter.periksa') }}" class="nav-link {{ Request::is('dokter/periksa*') || Request::is('dokter/daftar-poli*') ? 'active' : '' }}">
               <i class="nav-icon fas fa-stethoscope"></i>
               <p>Periksa Pasien</p>
             </a>
           </li>
           <li class="nav-item">
-            <a href="{{ route('dokter.obat') }}" class="nav-link {{ Request::is('dokter/obat') ? 'active' : '' }}">
+            <a href="{{ route('dokter.obat') }}" class="nav-link {{ Request::is('dokter/obat*') ? 'active' : '' }}">
               <i class="nav-icon fas fa-pills"></i>
               <p>Manajemen Obat</p>
+            </a>
+          </li>
+          
+          <!-- NEW: Profil Menu -->
+          <li class="nav-item">
+            <a href="{{ route('dokter.profil') }}" class="nav-link {{ Request::is('dokter/profil*') ? 'active' : '' }}">
+              <i class="nav-icon fas fa-user-edit"></i>
+              <p>Profil Saya</p>
             </a>
           </li>
         </ul>
@@ -129,7 +146,7 @@
   <!-- /.content-wrapper -->
 
   <footer class="main-footer">
-    <strong>Copyright &copy; 2025 <a href="#">Poliklinik</a>.</strong>
+    <strong>Copyright &copy; 2025 <a href="https://github.com/Hessaajipradana/tugas-wd05-14393">Poliklinik</a>.</strong>
     All rights reserved.
     <div class="float-right d-none d-sm-inline-block">
       <b>Version</b> 1.0.0
